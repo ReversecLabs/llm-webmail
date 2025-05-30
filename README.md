@@ -9,8 +9,6 @@ A sample vulnerable web application showcasing a GenAI (LLM-based) email summari
 - Python 3.x
 - An OpenAI/Google/AWS API key (added to a `.env` file)
 
-**GPT-4** is used as the underlying LLM.
-
 ## Installation & Usage
 
 1. **Clone the repo**:
