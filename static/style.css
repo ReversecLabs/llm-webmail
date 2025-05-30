@@ -1,0 +1,86 @@
+.main-wrapper {
+  display: flex;
+  transition: margin 0.3s ease;
+}
+
+.logo {
+    height: 1.5rem;
+    margin-left: 12px;
+    border-left: solid 2px black;
+    padding: 6px;
+}
+
+/* Center and constrain the content area */
+.content-area {
+  flex: 1;
+  padding: 1rem;
+}
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+/* Side Panel: collapsed width is 30px; expanded is 300px; full viewport height */
+.side-panel {
+  width: 30px;
+  height: 100vh;
+  transition: width 0.3s ease;
+  background-color: #f8f8f8;
+  border-left: 1px solid #ccc;
+  position: relative;
+}
+.side-panel.active {
+  width: 300px;
+}
+.toggle-handle {
+position: absolute;
+top: 50%;
+left: 0;
+transform: translate(-50%, -50%);
+background: #ccc;
+border: 1px solid #999;
+border-right: none;
+border-radius: 50%;
+width: 40px;
+height: 40px;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+}
+
+/* Top right checkbox */
+.top-right {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+/* Email item styling */
+.email-item {
+  cursor: pointer;
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+.email-item:hover {
+  background-color: #f5f5f5;
+}
+/* Sticky footer with logo */
+.sticky-footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: #e0e0e0;
+  padding: 1rem;
+  text-align: center;
+}
+.sticky-footer img {
+  height: 40px;
+  vertical-align: middle;
+  margin-right: 1rem;
+}
+/* Summary box: controls are now in a flex container */
+.summary-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 1rem;
+}

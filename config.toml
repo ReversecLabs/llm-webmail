@@ -1,0 +1,17 @@
+[llm]
+selected = "openai_gpt_4o"
+
+[prompt_engineering]
+# Options: "disabled", "basic", "system", "system+spotlighting"
+mode = "disabled"
+
+[prompt_injection_filter]
+# Options: "disabled", "meta-prompt-guard", "azure-prompt-shields", "aws-bedrock-guardrails", "injec-guard"
+mode = "disabled"
+
+[delimiter-filtering]
+# Options: "disabled", "escape", "remove"
+mode = "disabled"
+
+[logging]
+verbose = true

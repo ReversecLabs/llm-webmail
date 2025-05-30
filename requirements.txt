@@ -1,0 +1,10 @@
+Flask
+langchain
+langchain-openai
+langchain-google-genai
+langchain-aws
+langchain-together
+torch
+transformers
+toml
+boto3

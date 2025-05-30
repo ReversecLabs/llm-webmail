@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>LLM WebMail</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="static/style.css" />
+</head>
+
+<body>
+    {% raw %}
+    <div id="app">
+        <div class="main-wrapper">
+            <!-- Main Content Area -->
+            <div class="content-area">
+                <div class="content-wrapper" style="position: relative;">
+                    <!-- Top right checkbox -->
+                    <div class="top-right">
+                        <label class="checkbox">
+                            <input type="checkbox" @change="toggleMaliciousEmail" />
+                            Receive malicious email
+                        </label>
+                    </div>
+                    <h1 class="title is-flex is-align-items-center">
+                        <span class="icon mr-2"><i class="fas fa-envelope"></i></span>
+                        LLM WebMail
+                        <a target="_blank" href="https://reversec.com"><img class="logo" src="static/reversec-logo.png"></a>
+                    </h1>
+                    <!-- Summary Section -->
+                    <div v-if="inboxSummary && !loading" class="box has-background-success-light mb-4">
+                        <div class="summary-controls">
+                            <button class="button is-small is-primary" @click="summarizeInbox">
+                                <span class="icon"><i class="fas fa-sync-alt"></i></span>
+                                <span>New Summary</span>
+                            </button>
+                            <button class="delete" @click="clearSummary"></button>
+                        </div>
+                        <strong>Inbox Summary:</strong>
+                        <div v-html="renderMarkdown(inboxSummary)"></div>
+                    </div>
+                    <div v-if="!inboxSummary && !loading" class="buttons mb-4">
+                        <button class="button is-primary" @click="summarizeInbox">
+                            <span class="icon"><i class="fas fa-magic"></i></span>
+                            <span>Summarize My Inbox</span>
+                        </button>
+                    </div>
+                    <div v-if="loading"
+                        class="box has-background-light mb-4 is-flex is-align-items-center is-justify-content-center">
+                        <span class="icon is-large"><i class="fas fa-spinner fa-pulse"></i></span>
+                    </div>
+                    <!-- Emails List and Details -->
+                    <div class="columns">
+                        <div class="column is-one-third">
+                            <div class="box">
+                                <div class="email-list">
+                                    <div v-for="email in emails" :key="email.id" class="email-item"
+                                        @click="selectEmail(email)">
+                                        <strong>{{ email.sender }}</strong>
+                                        <small class="has-text-grey">{{ email.date }}</small>
+                                        <p>{{ email.subject }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div v-if="selectedEmail" class="box">
+                                <h2 class="subtitle">{{ selectedEmail.subject }}</h2>
+                                <p><strong>From:</strong> {{ selectedEmail.sender }}</p>
+                                <p><small>{{ selectedEmail.date }}</small></p>
+                                <div class="buttons is-right mt-2 mb-2">
+                                    <button v-if="!isEditing" @click="startEditing" class="button is-small is-info">
+                                        <span class="icon"><i class="fas fa-edit"></i></span>
+                                        <span>Edit</span>
+                                    </button>
+                                    <button v-else @click="saveEdits" class="button is-small is-success">
+                                        <span class="icon"><i class="fas fa-save"></i></span>
+                                        <span>Save</span>
+                                    </button>
+                                    <button v-if="isEditing" @click="cancelEditing" class="button is-small is-danger">
+                                        <span class="icon"><i class="fas fa-times"></i></span>
+                                        <span>Cancel</span>
+                                    </button>
+                                </div>
+                                <hr />
+                                <div v-if="!isEditing" v-html="renderPlain(getEmailBody(selectedEmail))"></div>
+                                <textarea v-else v-model="editedBody" class="textarea" rows="10"></textarea>
+                                
+                                <div v-if="isEdited(selectedEmail)" class="notification is-warning mt-3">
+                                    <strong>Warning:</strong> This email has been locally edited. Changes will be lost on page refresh.
+                                </div>
+                            </div>
+                            <div v-else class="notification is-info">
+                                Select an email to view details.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Panel for Configuration -->
+            <div class="side-panel" :class="{ active: showConfigPanel }">
+                <div class="toggle-handle" @click="toggleConfigPanel">
+                    <i :class="showConfigPanel ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
+                </div>
+                <div class="panel-content" style="padding: 1rem;" v-if="showConfigPanel">
+                    <header class="title is-5">Configuration</header>
+                    <!-- Inside the side panel, LLM dropdown: -->
+                    <div class="field">
+                        <label class="label">LLM</label>
+                        <div class="control">
+                            <div class="select">
+                                <select v-model="config.llm.selected" @change="updateConfig">
+                                    <option value="openai_gpt_4o">OpenAI GPT-4o</option>
+                                    <option value="openai_gpt_4o_mini">OpenAI GPT-4o Mini</option>
+                                    <option value="openai_gpt_41">OpenAI GPT-4.1</option>
+                                    <option value="openai_gpt_41_mini">OpenAI GPT-4.1-mini</option>
+                                    <option value="openai_o1_mini">OpenAI o1-mini</option>
+                                    <option value="openai_o1">OpenAI o1</option>
+                                    <option value="google_gemini_15_flash">Google Gemini 1.5 Flash</option>
+                                    <option value="google_gemini_2_flash">Google Gemini 2.0 Flash</option>
+                                    <option value="google_gemini_25_pro">Google Gemini 2.5 Pro</option>
+                                    <option value="anthropic_haiku_35">Anthropic Claude Haiku 3.5</option>
+                                    <option value="anthropic_sonnet_35">Anthropic Claude Sonnet 3.5</option>
+                                    <option value="anthropic_sonnet_37">Anthropic Claude Sonnet 3.7</option>
+                                    <option value="deepseek_r1">DeepSeek R1</option>
+                                    <option value="deepseek_v3">DeepSeek V3</option>
+                                    <option value="meta_llama_33_70B">Meta Llama 3.3 70B</option>
+                                    <option value="meta_llama_31_405B">Meta Llama 3.1 405B</option>
+                                    <option value="meta_llama_4_maverick">Meta Llama 4 Maverick</option>
+                                    <option value="meta_llama_4_scout">Meta Llama 4 Scout</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Prompt Engineering</label>
+                        <div class="control">
+                            <div class="select">
+                                <select v-model="config.prompt_engineering.mode" @change="updateConfig">
+                                    <option value="disabled">disabled</option>
+                                    <option value="basic">basic</option>
+                                    <option value="system">system</option>
+                                    <option value="system+spotlighting">system+spotlighting</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Prompt Injection Filter</label>
+                        <div class="control">
+                            <div class="select">
+                                <select v-model="config.prompt_injection_filter.mode" @change="updateConfig">
+                                    <option value="disabled">disabled</option>
+                                    <option value="meta-prompt-guard">Meta PromptGuard</option>
+                                    <option value="azure-prompt-shields">Azure Prompt Shields</option>
+                                    <option value="aws-bedrock-guardrails">AWS Bedrock Guardrails</option>
+                                    <option value="injec-guard">InjecGuard</option>
+
+
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Delimiter Filtering</label>
+                        <div class="control">
+                            <div class="select">
+                                <select v-model="config['delimiter-filtering'].mode" @change="updateConfig">
+                                    <option value="disabled">disabled</option>
+                                    <option value="escape">escape</option>
+                                    <option value="remove">remove</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Logging Verbose</label>
+                        <div class="control">
+                            <div class="select">
+                                <select v-model="config.logging.verbose" @change="updateConfig">
+                                    <option :value="true">Enabled</option>
+                                    <option :value="false">Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% endraw %}
+
+    <!-- Load Vue and Showdown -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
+    <script src="/static/main.js"></script>
+</body>
+
+</html>
