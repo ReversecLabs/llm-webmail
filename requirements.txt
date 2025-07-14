@@ -4,6 +4,7 @@ langchain-openai
 langchain-google-genai
 langchain-aws
 langchain-together
+langchain-ollama
 torch
 transformers
 toml

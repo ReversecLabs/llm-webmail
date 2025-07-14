@@ -1,5 +1,15 @@
 const { createApp } = Vue;
-const converter = new showdown.Converter();
+const converter = new showdown.Converter({
+  noHeaderId: false,
+  ghCompatibleHeaderId: true,
+  parseImgDimensions: true,
+  headerLevelStart: 1,
+  simplifiedAutoLink: true,
+  excludeTrailingPunctuationFromURLs: true,
+  literalMidWordUnderscores: true,
+  strikethrough: true,
+  tables: true
+});
 
 createApp({
   data() {

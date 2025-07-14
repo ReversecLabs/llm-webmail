@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 from guardrails.meta_prompt_guard import meta_scan_for_injections
 from guardrails.azure_prompt_shields import azure_detect_prompt_injection
 from guardrails.aws_bedrock_guardrail import aws_detect_prompt_injection
-from guardrails.injec_guard import inject_guard_detect_prompt_injection 
 
 load_dotenv()
 config = toml.load("config.toml")
@@ -51,6 +50,15 @@ def initialize_llm(llm_choice):
         elif llm_choice == "openai_o1":
             return ChatOpenAI(model="o1", max_tokens=None)
     
+    if llm_choice.startswith("ollama_"):
+        from langchain_ollama import ChatOllama
+        if llm_choice == "ollama_gemma3":
+            return ChatOllama(model="gemma3", max_tokens=None, temperature=0)
+        elif llm_choice == "ollama_llama32":
+            return ChatOllama(model="llama3.2", max_tokens=None, temperature=0)
+        elif llm_choice == "ollama_mistral_nemo":
+            return ChatOllama(model="mistral-nemo", max_tokens=None, temperature=0)
+
     elif llm_choice.startswith("google_"):
         if llm_choice == "google_gemini_15_flash":
             return ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0, max_tokens=None, timeout=None, max_retries=2)
@@ -96,6 +104,7 @@ llm = initialize_llm(llm_choice)
 VALID_LLM_OPTIONS = [
     "openai_gpt_4o", "openai_gpt_4o_mini", "openai_gpt_41", "openai_gpt_41_mini",
     "openai_o1_mini", "openai_o1",
+    "ollama_llama32","ollama_gemma3", "ollama_mistral_nemo",
     "google_gemini_15_flash", "google_gemini_2_flash", "google_gemini_25_pro",
     "anthropic_haiku_35", "anthropic_sonnet_35", "anthropic_sonnet_37", 
     "deepseek_r1", "deepseek_v3", 
@@ -129,11 +138,6 @@ def generic_scan_for_injections(text):
         result = aws_detect_prompt_injection(text)
         if LOG_VERBOSE and result:
             logging.info("Injection detected by aws-bedrock-guardrails: %s", text)
-        return result
-    elif mode == "injec-guard":
-        result = inject_guard_detect_prompt_injection(text)
-        if LOG_VERBOSE and result:
-            logging.info("injec-guard: %s", text)
         return result
 
     return False
