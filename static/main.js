@@ -8,7 +8,8 @@ const converter = new showdown.Converter({
   excludeTrailingPunctuationFromURLs: true,
   literalMidWordUnderscores: true,
   strikethrough: true,
-  tables: true
+  tables: true,
+  simpleLineBreaks: true,
 });
 
 createApp({
@@ -63,7 +64,7 @@ createApp({
         const emailBody = this.getEmailBody(email);
         return `SENDER: ${email.sender}\nSUBJECT: ${email.subject}\n\n${emailBody}`;
       });
-      
+
       fetch("/api/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -118,14 +119,13 @@ createApp({
     },
     renderMarkdown(markdownText) {
       try {
-        const html = converter.makeHtml(markdownText || '');
-        return html.replace(/\n/g, "<br>");
+        return converter.makeHtml(markdownText || '');
       } catch (error) {
         console.error("Error rendering Markdown:", error);
         return "";
       }
     },
-    
+
     // Email editing functionality
     startEditing() {
       if (this.selectedEmail) {
@@ -133,7 +133,7 @@ createApp({
         this.isEditing = true;
       }
     },
-    
+
     saveEdits() {
       if (this.selectedEmail && this.isEditing) {
         // Store the edited body locally
@@ -141,11 +141,11 @@ createApp({
         this.isEditing = false;
       }
     },
-    
+
     cancelEditing() {
       this.isEditing = false;
     },
-    
+
     // Get the email body (original or edited)
     getEmailBody(email) {
       if (email && this.editedEmails.hasOwnProperty(email.id)) {
@@ -153,7 +153,7 @@ createApp({
       }
       return email ? email.body : "";
     },
-    
+
     // Check if an email has been edited
     isEdited(email) {
       return email && this.editedEmails.hasOwnProperty(email.id);

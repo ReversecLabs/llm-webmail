@@ -84,3 +84,19 @@ cursor: pointer;
   gap: 10px;
   margin-bottom: 1rem;
 }
+
+/* Tighter spacing for markdown-rendered content */
+.markdown p,
+.markdown ul,
+.markdown ol {
+  margin-top: 0;
+  margin-bottom: 0.4rem; /* tweak to taste */
+}
+
+.markdown li {
+  margin: 0.2rem 0;
+}
+
+.markdown h1, .markdown h2, .markdown h3 {
+  margin: 0.6rem 0 0.4rem;
+}

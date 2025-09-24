@@ -38,7 +38,7 @@
                             <button class="delete" @click="clearSummary"></button>
                         </div>
                         <strong>Inbox Summary:</strong>
-                        <div v-html="renderMarkdown(inboxSummary)"></div>
+                        <div class="markdown" v-html="renderMarkdown(inboxSummary)"></div>
                     </div>
                     <div v-if="!inboxSummary && !loading" class="buttons mb-4">
                         <button class="button is-primary" @click="summarizeInbox">
@@ -116,6 +116,7 @@
                                     <option value="openai_gpt_4o_mini">OpenAI GPT-4o Mini</option>
                                     <option value="openai_gpt_41">OpenAI GPT-4.1</option>
                                     <option value="openai_gpt_41_mini">OpenAI GPT-4.1-mini</option>
+                                    <option value="llamacpp-server">Llama.cpp Server</option>
                                     <option value="openai_o1_mini">OpenAI o1-mini</option>
                                     <option value="openai_o1">OpenAI o1</option>
                                     <option value="ollama_gemma3">Ollama Gemma3</option>
