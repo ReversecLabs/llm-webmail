@@ -100,3 +100,38 @@ cursor: pointer;
 .markdown h1, .markdown h2, .markdown h3 {
   margin: 0.6rem 0 0.4rem;
 }
+
+/* keep the main content centered and constrained (as it was) */
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* stop the email body from bleeding to the right */
+.content pre,
+pre.content,
+.box pre {
+  white-space: pre-wrap;      /* wrap long lines */
+  word-break: break-word;     /* break very long tokens */
+  overflow-wrap: anywhere;    /* last resort for unbroken strings */
+}
+
+.admin-modal.modal-card { width: 960px; max-width: calc(100vw - 80px); }
+.admin-console-button { position: static; }
+/* ensure the absolute checkbox is positioned relative to the wrapper */
+.content-wrapper { position: relative; }
+
+.top-right {
+  position: absolute;
+  top: 0.5rem;      /* small gap below header */
+  right: 1rem;
+  z-index: 10;
+}
+
+.content-wrapper {
+  position: relative;
+  padding-top: 2.5rem; /* reserve vertical space so summary box doesn't overlap checkbox */
+}
+
+/* nuke any old fixed positioning we added earlier */
+.admin-console-button { position: static !important; }

@@ -16,6 +16,16 @@ from guardrails.meta_prompt_guard import meta_scan_for_injections
 from guardrails.azure_prompt_shields import azure_detect_prompt_injection
 from guardrails.aws_bedrock_guardrail import aws_detect_prompt_injection
 
+from flask import session
+from db import ensure_admin
+from config_loader import load_config
+from security import install_guards
+from auth_api import auth_bp
+from quota_api import quota_bp
+from auth_api import keys_bp
+from config_admin_api import config_admin_bp
+from users_admin_api import users_admin_bp
+
 load_dotenv()
 config = toml.load("config.toml")
 logging.basicConfig(level=logging.INFO)
@@ -191,6 +201,15 @@ def llm_summary(documents):
         raise
 
 app = Flask(__name__)
+_cfg = load_config()
+app.secret_key = _cfg["server"]["session_secret"]
+ensure_admin(_cfg["admin"]["username"], _cfg["admin"]["password_hash"])
+install_guards(app)
+app.register_blueprint(auth_bp)
+app.register_blueprint(quota_bp)
+app.register_blueprint(keys_bp)
+app.register_blueprint(config_admin_bp)
+app.register_blueprint(users_admin_bp)
 
 BASE_EMAILS = [
     {
@@ -257,7 +276,12 @@ def index():
 @app.route("/api/emails")
 def list_emails():
     logging.info("Listing emails")
-    return jsonify(MOCK_EMAILS)
+    include_mal = request.args.get("include_malicious", "false").lower() == "true"
+    emails = list(MOCK_EMAILS) 
+    if include_mal:
+        emails.append(MALICIOUS_EMAIL)
+    return jsonify(emails)
+
 
 @app.route("/api/emails/<int:email_id>")
 def get_email(email_id):

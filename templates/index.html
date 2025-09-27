@@ -12,7 +12,58 @@
 <body>
     {% raw %}
     <div id="app">
-        <div class="main-wrapper">
+        <!-- AUTH GATE -->
+        <div v-if="!authenticated" class="section">
+            <div class="container" style="max-width: 480px;">
+                <div class="box">
+                    <h1 class="title is-flex is-align-items-center">
+                        <span class="icon mr-2"><i class="fas fa-envelope"></i></span>
+                        LLM WebMail
+                    </h1>
+                    <div class="tabs is-toggle is-fullwidth">
+                        <ul>
+                            <li :class="{ 'is-active': authMode==='login' }">
+                                <a @click="authMode='login'">Login</a>
+                            </li>
+                            <li :class="{ 'is-active': authMode==='register' }">
+                                <a @click="authMode='register'">Register</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div v-if="authMode==='login'">
+                        <div class="field">
+                            <label class="label">Username</label>
+                            <div class="control"><input v-model="loginForm.username" class="input" /></div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Password</label>
+                            <div class="control"><input v-model="loginForm.password" type="password" class="input" />
+                            </div>
+                        </div>
+                        <button class="button is-primary is-fullwidth" @click="doLogin">Login</button>
+                    </div>
+                    <div v-else>
+                        <div class="field">
+                            <label class="label">Signup Key</label>
+                            <div class="control"><input v-model="registerForm.key" class="input" /></div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Username</label>
+                            <div class="control"><input v-model="registerForm.username" class="input" /></div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Password</label>
+                            <div class="control"><input v-model="registerForm.password" type="password" class="input" />
+                            </div>
+                        </div>
+                        <button class="button is-primary is-fullwidth" @click="doRegister">Register</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN APP (unchanged content wrapped in v-else) -->
+        <div v-else class="main-wrapper">
             <!-- Main Content Area -->
             <div class="content-area">
                 <div class="content-wrapper" style="position: relative;">
@@ -26,14 +77,29 @@
                     <h1 class="title is-flex is-align-items-center">
                         <span class="icon mr-2"><i class="fas fa-envelope"></i></span>
                         LLM WebMail
-                        <a target="_blank" href="https://reversec.com"><img class="logo" src="static/reversec-logo.png"></a>
+                        <a target="_blank" href="https://reversec.com"><img class="logo"
+                                src="static/reversec-logo.png"></a>
+
+                        <!-- Admin button: aligned to the right, leave space for the checkbox -->
+                        <button v-if="isAdmin" class="button is-small is-dark" style="margin-left:auto"
+                            @click="openAdminConsole">
+                            <span class="icon"><i class="fas fa-tools"></i></span>
+                            <span>Admin Console</span>
+                        </button>
+                        <button v-if="authenticated" class="button is-small is-light ml-2" @click="doLogout">
+                            <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
+                            <span>Logout</span>
+                        </button>
                     </h1>
                     <!-- Summary Section -->
                     <div v-if="inboxSummary && !loading" class="box has-background-success-light mb-4">
                         <div class="summary-controls">
-                            <button class="button is-small is-primary" @click="summarizeInbox">
+                            <button class="button is-small is-primary" @click="summarizeInbox"
+                                :disabled="quota.remaining===0">
                                 <span class="icon"><i class="fas fa-sync-alt"></i></span>
                                 <span>New Summary</span>
+                                <span class="tag is-light" style="margin-left:.5rem">{{ quota.remaining }}/{{
+                                    quota.limit }}</span>
                             </button>
                             <button class="delete" @click="clearSummary"></button>
                         </div>
@@ -41,9 +107,11 @@
                         <div class="markdown" v-html="renderMarkdown(inboxSummary)"></div>
                     </div>
                     <div v-if="!inboxSummary && !loading" class="buttons mb-4">
-                        <button class="button is-primary" @click="summarizeInbox">
+                        <button class="button is-primary" @click="summarizeInbox" :disabled="quota.remaining===0">
                             <span class="icon"><i class="fas fa-magic"></i></span>
                             <span>Summarize My Inbox</span>
+                            <span class="tag is-light" style="margin-left:.5rem">{{ quota.remaining }}/{{ quota.limit
+                                }}</span>
                         </button>
                     </div>
                     <div v-if="loading"
@@ -86,9 +154,10 @@
                                 <hr />
                                 <div v-if="!isEditing" v-html="renderPlain(getEmailBody(selectedEmail))"></div>
                                 <textarea v-else v-model="editedBody" class="textarea" rows="10"></textarea>
-                                
+
                                 <div v-if="isEdited(selectedEmail)" class="notification is-warning mt-3">
-                                    <strong>Warning:</strong> This email has been locally edited. Changes will be lost on page refresh.
+                                    <strong>Warning:</strong> This email has been locally edited. Changes will be lost
+                                    on page refresh.
                                 </div>
                             </div>
                             <div v-else class="notification is-info">
@@ -111,7 +180,7 @@
                         <label class="label">LLM</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config.llm.selected" @change="updateConfig">
+                                <select v-model="config.llm.selected" @change="updateConfig" :disabled="!isAdmin">
                                     <option value="openai_gpt_4o">OpenAI GPT-4o</option>
                                     <option value="openai_gpt_4o_mini">OpenAI GPT-4o Mini</option>
                                     <option value="openai_gpt_41">OpenAI GPT-4.1</option>
@@ -142,7 +211,8 @@
                         <label class="label">Prompt Engineering</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config.prompt_engineering.mode" @change="updateConfig">
+                                <select v-model="config.prompt_engineering.mode" @change="updateConfig"
+                                    :disabled="!isAdmin">
                                     <option value="disabled">disabled</option>
                                     <option value="basic">basic</option>
                                     <option value="system">system</option>
@@ -155,14 +225,13 @@
                         <label class="label">Prompt Injection Filter</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config.prompt_injection_filter.mode" @change="updateConfig">
+                                <select v-model="config.prompt_injection_filter.mode" @change="updateConfig"
+                                    :disabled="!isAdmin">
                                     <option value="disabled">disabled</option>
                                     <option value="meta-prompt-guard">Meta PromptGuard</option>
                                     <option value="azure-prompt-shields">Azure Prompt Shields</option>
                                     <option value="aws-bedrock-guardrails">AWS Bedrock Guardrails</option>
                                     <option value="injec-guard">InjecGuard</option>
-
-
                                 </select>
                             </div>
                         </div>
@@ -171,7 +240,8 @@
                         <label class="label">Delimiter Filtering</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config['delimiter-filtering'].mode" @change="updateConfig">
+                                <select v-model="config['delimiter-filtering'].mode" @change="updateConfig"
+                                    :disabled="!isAdmin">
                                     <option value="disabled">disabled</option>
                                     <option value="escape">escape</option>
                                     <option value="remove">remove</option>
@@ -183,7 +253,7 @@
                         <label class="label">Logging Verbose</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config.logging.verbose" @change="updateConfig">
+                                <select v-model="config.logging.verbose" @change="updateConfig" :disabled="!isAdmin">
                                     <option :value="true">Enabled</option>
                                     <option :value="false">Disabled</option>
                                 </select>
@@ -193,8 +263,99 @@
                 </div>
             </div>
 
+        </div><!-- end v-else main-wrapper -->
+        <!-- Admin Console Modal -->
+        <div class="modal" :class="{ 'is-active': adminConsoleOpen }" v-if="isAdmin">
+            <div class="modal-background" @click="closeAdminConsole"></div>
+            <div class="modal-card admin-modal">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Admin Console</p>
+                    <button class="delete" aria-label="close" @click="closeAdminConsole"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="tabs is-boxed">
+                        <ul>
+                            <li :class="{ 'is-active': adminTab==='users' }"><a @click="adminTab='users'">Users</a></li>
+                            <li :class="{ 'is-active': adminTab==='keys' }"><a @click="adminTab='keys'">Signup Keys</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Users tab -->
+                    <div v-show="adminTab==='users'">
+                        <div v-if="admin.users.length===0" class="notification is-light">No users.</div>
+                        <table v-else class="table is-fullwidth is-striped is-hoverable">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th style="width:240px">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="u in admin.users" :key="u.id">
+                                    <td>{{ u.username }}</td>
+                                    <td>{{ u.role }}</td>
+                                    <td>
+                                        <button class="button is-small" @click="resetUserPassword(u.username)">Reset
+                                            PW</button>
+                                        <button class="button is-small is-danger"
+                                            @click="deleteUser(u.username)">Delete</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Keys tab -->
+                    <div v-show="adminTab==='keys'">
+                        <div class="is-flex is-align-items-center is-justify-content-space-between mb-3">
+                            <strong>Signup Keys</strong>
+                            <div class="field has-addons">
+                                <p class="control">
+                                    <input class="input is-small" type="number" min="1" v-model.number="admin.genCount"
+                                        style="width:6rem">
+                                </p>
+                                <p class="control">
+                                    <button class="button is-small is-primary" @click="generateKeys">Generate</button>
+                                </p>
+                            </div>
+                        </div>
+                        <div v-if="admin.keys.length===0" class="notification is-light">No keys yet.</div>
+                        <table v-else class="table is-fullwidth is-narrow is-striped">
+                            <thead>
+                                <tr>
+                                    <th>Token</th>
+                                    <th>Used By</th>
+                                    <th>State</th>
+                                    <th style="width:200px">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="k in admin.keys" :key="k.token">
+                                    <td><code style="word-break:break-all">{{ k.token }}</code></td>
+                                    <td>{{ k.used_by || '-' }}</td>
+                                    <td>
+                                        <span v-if="k.revoked" class="tag is-warning is-light">revoked</span>
+                                        <span v-else class="tag is-success is-light">active</span>
+                                    </td>
+                                    <td>
+                                        <button class="button is-small" @click="copyToken(k.token)">Copy</button>
+                                        <button class="button is-small is-warning" @click="revokeKey(k.token)"
+                                            :disabled="k.revoked">Revoke</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button" @click="closeAdminConsole">Close</button>
+                </footer>
+            </div>
         </div>
     </div>
+
     {% endraw %}
 
     <!-- Load Vue and Showdown -->

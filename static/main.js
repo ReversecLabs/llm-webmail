@@ -1,162 +1,285 @@
 const { createApp } = Vue;
-const converter = new showdown.Converter({
-  noHeaderId: false,
-  ghCompatibleHeaderId: true,
-  parseImgDimensions: true,
-  headerLevelStart: 1,
-  simplifiedAutoLink: true,
-  excludeTrailingPunctuationFromURLs: true,
-  literalMidWordUnderscores: true,
-  strikethrough: true,
-  tables: true,
-  simpleLineBreaks: true,
-});
+const converter = new showdown.Converter({ tables: true, strikethrough: true });
 
 createApp({
   data() {
     return {
+      authenticated: false,
+      authMode: "login",
+      user: null,
+      quota: { remaining: 0, limit: 0 },
+      includeMalicious: false,
+
       emails: [],
       selectedEmail: null,
-      inboxSummary: null,
+      inboxSummary: "",
       loading: false,
-      showConfigPanel: true,
+
       isEditing: false,
       editedBody: "",
-      editedEmails: {}, // Store locally edited emails by ID
-      // Default config values; will be updated via fetchConfig()
-      config: {
-        llm: { selected: "openai_gpt_4o" },
-        prompt_engineering: { mode: "disabled" },
-        prompt_injection_filter: { mode: "disabled" },
-        "delimiter-filtering": { mode: "disabled" },
-        logging: { verbose: false }
-      }
+      editedEmails: {},
+
+      config: null,
+      showConfigPanel: false,
+
+      loginForm: { username: "", password: "" },
+      registerForm: { key: "", username: "", password: "" },
+      admin: {
+        genCount: 5,
+        keys: [],
+        users: []
+      },
+      adminConsoleOpen: false,
+      adminTab: 'users',
     };
   },
-  mounted() {
-    this.fetchEmails();
-    this.fetchConfig();
+  computed: {
+    isAdmin() {
+      return this.user && this.user.role === "admin";
+    },
   },
   methods: {
-    fetchEmails() {
-      fetch("/api/emails")
-        .then((r) => r.json())
-        .then((data) => {
-          this.emails = data;
-        });
+    async init() {
+      const me = await this.safeJson(fetch("/api/me"));
+      if (me && me.authenticated) {
+        this.user = { username: me.username, role: me.role };
+        this.authenticated = true;
+        await this.refreshAll();
+      } else {
+        this.authenticated = false;
+      }
     },
-    fetchConfig() {
-      fetch("/api/config")
-        .then((r) => r.json())
-        .then((data) => {
-          this.config = data;
-        })
-        .catch(err => console.error("Error fetching config:", err));
+    async refreshAll() {
+      await Promise.all([this.fetchQuota(), this.fetchConfig(), this.fetchEmails()]);
     },
+    async doLogin() {
+      const r = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(this.loginForm),
+      });
+      if (!r.ok) return alert("Invalid credentials.");
+      const me = await r.json();
+      this.user = me;
+      this.authenticated = true;
+      await this.refreshAll();
+      if (this.isAdmin) {
+        await Promise.all([this.fetchAdminKeys(), this.fetchUsers()]);
+      }
+    },
+    async doRegister() {
+      const r = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(this.registerForm),
+      });
+      if (!r.ok) {
+        const j = await this.safeJson(r);
+        return alert(j && j.error ? j.error : "Registration failed.");
+      }
+      const me = await r.json();
+      this.user = me;
+      this.authenticated = true;
+      await this.refreshAll();
+      if (this.isAdmin) {
+        await Promise.all([this.fetchAdminKeys(), this.fetchUsers()]);
+      }
+    },
+    async doLogout() {
+      await fetch("/api/logout", { method: "POST" });
+      this.authenticated = false;
+      this.user = null;
+      this.emails = [];
+      this.inboxSummary = "";
+      this.selectedEmail = null;
+      this.admin.keys = [];
+      this.admin.users = [];
+    },
+    async fetchQuota() {
+      const j = await this.safeJson(fetch("/api/quota"));
+      if (j) this.quota = j;
+    },
+    async fetchConfig() {
+      const j = await this.safeJson(fetch("/api/config"));
+      if (j) this.config = j;
+    },
+    async updateConfig() {
+      if (!this.isAdmin) return;
+      await fetch("/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(this.config),
+      });
+    },
+
+    async fetchEmails() {
+      const url = `/api/emails?include_malicious=${this.includeMalicious ? "true" : "false"}`;
+      const j = await this.safeJson(fetch(url));
+      if (!j) return;
+      this.emails = j.emails || j;
+      if (this.selectedEmail) {
+        const found = this.emails.find((e) => e.id === this.selectedEmail.id);
+        if (!found) this.selectedEmail = null;
+      }
+    },
+    toggleMaliciousEmail() {
+      this.includeMalicious = !this.includeMalicious;
+      this.fetchEmails();
+    },
+
     selectEmail(email) {
       this.selectedEmail = email;
       this.isEditing = false;
+      this.editedBody = "";
     },
-    summarizeInbox() {
-      this.loading = true;
-      // Build document string including sender and subject.
-      const documents = this.emails.map(email => {
-        const emailBody = this.getEmailBody(email);
-        return `SENDER: ${email.sender}\nSUBJECT: ${email.subject}\n\n${emailBody}`;
-      });
+    getEmailBody(email) {
+      if (!email) return "";
+      return Object.prototype.hasOwnProperty.call(this.editedEmails, email.id)
+        ? this.editedEmails[email.id]
+        : (email.body || "");
+    },
+    isEdited(email) {
+      return !!(email && Object.prototype.hasOwnProperty.call(this.editedEmails, email.id));
+    },
+    startEditing() {
+      if (!this.selectedEmail) return;
+      this.editedBody = this.getEmailBody(this.selectedEmail);
+      this.isEditing = true;
+    },
+    saveEdits() {
+      if (!this.selectedEmail) return;
+      this.editedEmails[this.selectedEmail.id] = this.editedBody;
+      this.isEditing = false;
+    },
+    cancelEditing() {
+      this.isEditing = false;
+      this.editedBody = "";
+    },
 
-      fetch("/api/summarize", {
+    async summarizeInbox() {
+      this.loading = true;
+      const documents = this.emails.map((e) => ({
+        subject: e.subject,
+        body: this.getEmailBody(e),
+      }));
+      const r = await fetch("/api/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documents })
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          this.inboxSummary = data.summary;
-        })
-        .finally(() => {
-          this.loading = false;
-        });
+        body: JSON.stringify({
+          documents: documents.map(d => `Subject: ${d.subject || ''}\n\n${d.body || ''}`)
+        }),
+      });
+      this.loading = false;
+
+      if (r.status === 429) {
+        const j = await this.safeJson(r);
+        return alert(`Daily limit reached (${j && j.limit != null ? j.limit : "limit"}).`);
+      }
+      if (!r.ok) return;
+
+      const j = await r.json();
+      this.inboxSummary = j.summary || j.result || "";
+      await this.fetchQuota();
+    },
+    summarizeInboxDirect() {
+      return this.summarizeInbox();
+    },
+    summarizeAgain() {
+      return this.summarizeInbox();
     },
     clearSummary() {
-      this.inboxSummary = null;
+      this.inboxSummary = "";
     },
-    toggleMaliciousEmail(event) {
-      const endpoint = event.target.checked ? "/api/add_malicious" : "/api/remove_malicious";
-      fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          console.log(data.message);
-          this.fetchEmails();
-        });
+
+    renderMarkdown(md) {
+      return converter.makeHtml(md || "");
     },
+    renderPlain(txt) {
+      const s = (txt || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+      return `<pre class="content">${s}</pre>`;
+    },
+
     toggleConfigPanel() {
       this.showConfigPanel = !this.showConfigPanel;
     },
-    updateConfig() {
-      fetch("/api/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(this.config)
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          console.log("Configuration updated:", data.message);
-          this.config = data.config;
-        })
-        .catch(err => console.error("Error updating config:", err));
-    },
-    renderPlain(text) {
+
+    async safeJson(promiseOrResponse) {
       try {
-        return text.replace(/\n/g, "<br>");
-      } catch (error) {
-        console.error("Error rendering text:", error);
-        return "";
+        const r = promiseOrResponse instanceof Response ? promiseOrResponse : await promiseOrResponse;
+        return await r.json();
+      } catch {
+        return null;
       }
     },
-    renderMarkdown(markdownText) {
-      try {
-        return converter.makeHtml(markdownText || '');
-      } catch (error) {
-        console.error("Error rendering Markdown:", error);
-        return "";
+    async fetchAdminKeys() {
+      if (!this.isAdmin) return;
+      const r = await fetch('/api/signup-keys');
+      if (r.ok) this.admin.keys = await r.json();
+    },
+    async generateKeys() {
+      if (!this.isAdmin) return;
+      const count = Math.max(1, Math.min(1000, this.admin.genCount | 0 || 1));
+      const r = await fetch('/api/signup-keys', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count })
+      });
+      if (r.ok) {
+        const j = await r.json();
+        // prepend newest
+        const newItems = (j.tokens || []).map(t => ({ token: t, revoked: false, created_at: new Date().toISOString(), used_by: null }));
+        this.admin.keys = newItems.concat(this.admin.keys);
       }
     },
-
-    // Email editing functionality
-    startEditing() {
-      if (this.selectedEmail) {
-        this.editedBody = this.getEmailBody(this.selectedEmail);
-        this.isEditing = true;
+    async revokeKey(token) {
+      if (!this.isAdmin) return;
+      await fetch('/api/signup-keys/revoke', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+      // refresh list
+      await this.fetchAdminKeys();
+    },
+    copyToken(token) {
+      navigator.clipboard?.writeText(token);
+    },
+    async fetchUsers() {
+      if (!this.isAdmin) return;
+      const r = await fetch('/api/admin/users');
+      if (r.ok) this.admin.users = await r.json();
+    },
+    async resetUserPassword(username) {
+      if (!this.isAdmin) return;
+      const pw = prompt(`New password for ${username}:`);
+      if (!pw) return;
+      const r = await fetch('/api/admin/users/reset-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password: pw })
+      });
+      if (!r.ok) alert('Failed to reset password');
+    },
+    async deleteUser(username) {
+      if (!this.isAdmin) return;
+      if (!confirm(`Delete user ${username}? This removes quota usage for that user.`)) return;
+      const r = await fetch('/api/admin/users/delete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      if (!r.ok) return alert('Failed to delete user');
+      await this.fetchUsers();
+    },
+    openAdminConsole() {
+      this.adminConsoleOpen = true;
+      this.adminTab = 'users';
+      if (this.isAdmin) {
+        this.fetchUsers();
+        this.fetchAdminKeys();
       }
     },
-
-    saveEdits() {
-      if (this.selectedEmail && this.isEditing) {
-        // Store the edited body locally
-        this.editedEmails[this.selectedEmail.id] = this.editedBody;
-        this.isEditing = false;
-      }
+    closeAdminConsole() {
+      this.adminConsoleOpen = false;
     },
-
-    cancelEditing() {
-      this.isEditing = false;
-    },
-
-    // Get the email body (original or edited)
-    getEmailBody(email) {
-      if (email && this.editedEmails.hasOwnProperty(email.id)) {
-        return this.editedEmails[email.id];
-      }
-      return email ? email.body : "";
-    },
-
-    // Check if an email has been edited
-    isEdited(email) {
-      return email && this.editedEmails.hasOwnProperty(email.id);
-    }
-  }
+  },
+  mounted() {
+    this.init();
+  },
 }).mount("#app");
