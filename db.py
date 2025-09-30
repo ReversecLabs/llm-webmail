@@ -1,4 +1,5 @@
 import sqlite3, os, pathlib, datetime, hashlib  # add if missing
+from werkzeug.security import generate_password_hash
 
 DB_PATH = os.environ.get("WEBMAIL_DB", "data.db")
 _path = pathlib.Path(DB_PATH)
@@ -37,26 +38,25 @@ def get_conn():
         conn.commit()
     return conn
 
-def _hash_password(password: str, iterations: int = 260000) -> str:
-    salt = os.urandom(16)
-    dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
-    return f"pbkdf2_sha256${iterations}${salt.hex()}${dk.hex()}"
-
 def ensure_admin(admin_username: str, cleartext_password: str):
     """
-    Takes CLEARtext admin password from config, hashes it, inserts admin if missing.
+    Takes CLEARtext admin password from config, hashes with Werkzeug, and upserts the admin user.
     """
+    final_hash = generate_password_hash(cleartext_password)  # format: pbkdf2:sha256:...
     conn = get_conn()
     try:
-        cur = conn.execute("SELECT id FROM users WHERE username=?", (admin_username,))
-        row = cur.fetchone()
-        if not row:
-            final_hash = _hash_password(cleartext_password)
-            conn.execute(
-                "INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
-                (admin_username, final_hash, "admin"),
-            )
-            conn.commit()
+        # SQLite upsert ensures existing admin gets updated to the new hash format
+        conn.execute(
+            """
+            INSERT INTO users (username, password_hash, role)
+            VALUES (?, ?, 'admin')
+            ON CONFLICT(username) DO UPDATE SET
+                password_hash=excluded.password_hash,
+                role='admin'
+            """,
+            (admin_username, final_hash),
+        )
+        conn.commit()
     finally:
         conn.close()
 
