@@ -10,3 +10,4 @@ transformers
 toml
 boto3
 haikunator
+werkzeug

@@ -18,12 +18,10 @@ verbose = true
 
 [admin]
 username = "admin"
-# bcrypt or werkzeug pbkdf2 hash. Example (pbkdf2:sha256):
-# password_hash = "pbkdf2:sha256:260000$..."
-password_hash = "scrypt:32768:8:1$kYCuWwxNhjwzgDBW$a7c03222cd5960a8c251dfa6ef80eb9d5235ceca16da80a9cbd10a5bc11b1a248aacc44e8ad39c3fa9a2dcb677d615b3040960e4dd1713894d18d2e0f05640b8"
+password = "password"
 
 [server]
 session_secret = "CHANGE_ME_RANDOM_LONG"
 
 [limits]
-daily_summarize_quota = 10
+daily_summarize_quota = 500

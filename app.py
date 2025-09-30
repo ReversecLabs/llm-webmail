@@ -203,7 +203,7 @@ def llm_summary(documents):
 app = Flask(__name__)
 _cfg = load_config()
 app.secret_key = _cfg["server"]["session_secret"]
-ensure_admin(_cfg["admin"]["username"], _cfg["admin"]["password_hash"])
+ensure_admin(_cfg["admin"]["username"], _cfg["admin"]["password"])
 install_guards(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(quota_bp)

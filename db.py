@@ -1,4 +1,5 @@
-import sqlite3, os, pathlib, datetime
+import sqlite3, os, pathlib, datetime, hashlib  # add if missing
+
 DB_PATH = os.environ.get("WEBMAIL_DB", "data.db")
 _path = pathlib.Path(DB_PATH)
 
@@ -36,16 +37,28 @@ def get_conn():
         conn.commit()
     return conn
 
-def ensure_admin(admin_username, admin_hash):
+def _hash_password(password: str, iterations: int = 260000) -> str:
+    salt = os.urandom(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
+    return f"pbkdf2_sha256${iterations}${salt.hex()}${dk.hex()}"
+
+def ensure_admin(admin_username: str, cleartext_password: str):
+    """
+    Takes CLEARtext admin password from config, hashes it, inserts admin if missing.
+    """
     conn = get_conn()
-    cur = conn.execute("SELECT id FROM users WHERE username=?", (admin_username,))
-    if not cur.fetchone():
-        conn.execute(
-            "INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
-            (admin_username, admin_hash, "admin"),
-        )
-        conn.commit()
-    conn.close()
+    try:
+        cur = conn.execute("SELECT id FROM users WHERE username=?", (admin_username,))
+        row = cur.fetchone()
+        if not row:
+            final_hash = _hash_password(cleartext_password)
+            conn.execute(
+                "INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
+                (admin_username, final_hash, "admin"),
+            )
+            conn.commit()
+    finally:
+        conn.close()
 
 # Users
 
