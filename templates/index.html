@@ -228,10 +228,8 @@
                                 <select v-model="config.prompt_injection_filter.mode" @change="updateConfig"
                                     :disabled="!isAdmin">
                                     <option value="disabled">disabled</option>
-                                    <option value="meta-prompt-guard">Meta PromptGuard</option>
                                     <option value="azure-prompt-shields">Azure Prompt Shields</option>
                                     <option value="aws-bedrock-guardrails">AWS Bedrock Guardrails</option>
-                                    <option value="injec-guard">InjecGuard</option>
                                 </select>
                             </div>
                         </div>
