@@ -1,5 +1,6 @@
-import sqlite3, os, pathlib, datetime, hashlib  # add if missing
+import sqlite3, os, pathlib, datetime, hashlib
 from werkzeug.security import generate_password_hash
+import json
 
 DB_PATH = os.environ.get("WEBMAIL_DB", "data.db")
 _path = pathlib.Path(DB_PATH)
@@ -27,6 +28,11 @@ CREATE TABLE IF NOT EXISTS daily_usage (
   PRIMARY KEY (user_id, date),
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
+CREATE TABLE IF NOT EXISTS user_configs (
+  user_id INTEGER PRIMARY KEY,
+  config_json TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
 """
 
 def get_conn():
@@ -39,13 +45,9 @@ def get_conn():
     return conn
 
 def ensure_admin(admin_username: str, cleartext_password: str):
-    """
-    Takes CLEARtext admin password from config, hashes with Werkzeug, and upserts the admin user.
-    """
-    final_hash = generate_password_hash(cleartext_password)  # format: pbkdf2:sha256:...
+    final_hash = generate_password_hash(cleartext_password)
     conn = get_conn()
     try:
-        # SQLite upsert ensures existing admin gets updated to the new hash format
         conn.execute(
             """
             INSERT INTO users (username, password_hash, role)
@@ -61,14 +63,18 @@ def ensure_admin(admin_username: str, cleartext_password: str):
         conn.close()
 
 # Users
-
 def get_user_by_username(username):
     return get_conn().execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
 
 def get_user_by_id(uid):
     return get_conn().execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
 
-def create_user(username, password_hash):
+def create_user(username, password_hash, initial_config_json=None):
+    """
+    Creates user and optionally creates a default user_config row.
+    initial_config_json: JSON string (str) or None.
+    Returns the user row.
+    """
     conn = get_conn()
     conn.execute(
         "INSERT INTO users (username, password_hash, role) VALUES (?,?,?)",
@@ -76,11 +82,28 @@ def create_user(username, password_hash):
     )
     conn.commit()
     row = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
+    if initial_config_json is not None:
+        conn.execute(
+            "INSERT OR REPLACE INTO user_configs (user_id, config_json) VALUES (?,?)",
+            (row["id"], initial_config_json),
+        )
+        conn.commit()
     conn.close()
     return row
 
-# Signup keys
+# User config helpers
+def get_user_config(user_id):
+    r = get_conn().execute("SELECT config_json FROM user_configs WHERE user_id=?", (user_id,)).fetchone()
+    return json.loads(r["config_json"]) if r else None
 
+def set_user_config(user_id, cfg_dict):
+    j = json.dumps(cfg_dict)
+    conn = get_conn()
+    conn.execute("INSERT OR REPLACE INTO user_configs (user_id, config_json) VALUES (?,?)", (user_id, j))
+    conn.commit()
+    conn.close()
+
+# Signup keys
 def create_keys(tokens):
     conn = get_conn()
     now = datetime.datetime.now().isoformat()
@@ -91,7 +114,6 @@ def create_keys(tokens):
     conn.commit()
     conn.close()
 
-
 def list_keys():
     return get_conn().execute(
         """
@@ -101,12 +123,10 @@ def list_keys():
         """
     ).fetchall()
 
-
 def get_key(token):
     return get_conn().execute(
         "SELECT * FROM signup_keys WHERE token=?", (token,)
     ).fetchone()
-
 
 def mark_key_used(token, user_id):
     conn = get_conn()
@@ -117,7 +137,6 @@ def mark_key_used(token, user_id):
     conn.commit()
     conn.close()
 
-
 def revoke_key(token):
     conn = get_conn()
     conn.execute("UPDATE signup_keys SET revoked=1 WHERE token=?", (token,))
@@ -125,10 +144,8 @@ def revoke_key(token):
     conn.close()
 
 # Usage
-
 def get_today():
     return datetime.date.today().isoformat()
-
 
 def get_usage(user_id, date):
     row = get_conn().execute(
@@ -136,7 +153,6 @@ def get_usage(user_id, date):
         (user_id, date),
     ).fetchone()
     return row[0] if row else 0
-
 
 def inc_usage(user_id, date):
     conn = get_conn()

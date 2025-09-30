@@ -34,6 +34,13 @@ createApp({
     };
   },
   computed: {
+    llmOptions() {
+      const models =
+        this?.config?.llm && Array.isArray(this.config.llm.models)
+          ? this.config.llm.models
+          : [];
+      return models.filter(m => m && m.enabled);
+    },
     isAdmin() {
       return this.user && this.user.role === "admin";
     },
@@ -104,14 +111,13 @@ createApp({
       if (j) this.config = j;
     },
     async updateConfig() {
-      if (!this.isAdmin) return;
+      if (!this.config) return;
       await fetch("/api/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(this.config),
       });
     },
-
     async fetchEmails() {
       const url = `/api/emails?include_malicious=${this.includeMalicious ? "true" : "false"}`;
       const j = await this.safeJson(fetch(url));

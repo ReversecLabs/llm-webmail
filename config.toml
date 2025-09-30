@@ -1,16 +1,127 @@
 [llm]
-selected = "openai_gpt_4o"
+selected = "together_qwen3-next-80b-a3b"
+[[llm.models]]
+enabled = true
+key = "openai_gpt_4o"
+label = "OpenAI GPT-4o"
+
+[[llm.models]]
+enabled = true
+key = "openai_gpt_4o_mini"
+label = "OpenAI GPT-4o mini"
+
+[[llm.models]]
+enabled = false
+key = "openai_gpt_41"
+label = "OpenAI GPT-4.1"
+
+[[llm.models]]
+enabled = false
+key = "openai_gpt_41_mini"
+label = "OpenAI GPT-4.1 mini"
+
+[[llm.models]]
+enabled = false
+key = "openai_o1_mini"
+label = "OpenAI o1-mini"
+
+[[llm.models]]
+enabled = false
+key = "openai_o1"
+label = "OpenAI o1"
+
+[[llm.models]]
+enabled = false
+key = "llamacpp-server"
+label = "llama.cpp Server"
+
+[[llm.models]]
+enabled = false
+key = "ollama_gemma3"
+label = "Ollama Gemma 3"
+
+[[llm.models]]
+enabled = false
+key = "ollama_llama32"
+label = "Ollama Llama 3.2"
+
+[[llm.models]]
+enabled = false
+key = "ollama_mistral_nemo"
+label = "Ollama Mistral-Nemo"
+
+[[llm.models]]
+enabled = false
+key = "google_gemini_15_flash"
+label = "Google Gemini 1.5 Flash"
+
+[[llm.models]]
+enabled = true
+key = "google_gemini_2_flash"
+label = "Google Gemini 2.0 Flash"
+
+[[llm.models]]
+enabled = false
+key = "google_gemini_25_pro"
+label = "Google Gemini 2.5 Pro (exp)"
+
+[[llm.models]]
+enabled = true
+key = "anthropic_haiku_35"
+label = "Anthropic Claude 3.5 Haiku"
+
+[[llm.models]]
+enabled = true
+key = "anthropic_sonnet_35"
+label = "Anthropic Claude 3.5 Sonnet"
+
+[[llm.models]]
+enabled = true
+key = "anthropic_sonnet_37"
+label = "Anthropic Claude 3.7 Sonnet"
+
+[[llm.models]]
+enabled = false
+key = "deepseek_r1"
+label = "DeepSeek R1"
+
+[[llm.models]]
+enabled = true
+key = "deepseek_v3"
+label = "DeepSeek V3"
+
+[[llm.models]]
+enabled = true
+key = "meta_llama_33_70B"
+label = "Meta Llama 3.3 70B Instruct"
+
+[[llm.models]]
+enabled = false
+key = "meta_llama_31_405B"
+label = "Meta Llama 3.1 405B Instruct"
+
+[[llm.models]]
+enabled = false
+key = "meta_llama_4_maverick"
+label = "Meta Llama 4 Maverick 17B"
+
+[[llm.models]]
+enabled = true
+key = "meta_llama_4_scout"
+label = "Meta Llama 4 Scout 17B"
+
+[[llm.models]]
+enabled = true
+key = "together_qwen3-next-80b-a3b"
+label = "Qwen3-Next-80B-A3B-Instruct"
 
 [prompt_engineering]
-# Options: "disabled", "basic", "system", "system+spotlighting"
 mode = "disabled"
 
 [prompt_injection_filter]
-# Options: "disabled", "meta-prompt-guard", "azure-prompt-shields", "aws-bedrock-guardrails", "injec-guard"
 mode = "disabled"
 
 [delimiter-filtering]
-# Options: "disabled", "escape", "remove"
 mode = "disabled"
 
 [logging]

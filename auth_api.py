@@ -1,13 +1,15 @@
 import secrets, datetime
 from haikunator import Haikunator
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, json
+from config_loader import load_config
 from werkzeug.security import generate_password_hash, check_password_hash
+import json
+
 from db import (
     get_user_by_username, create_user, get_user_by_id,
     get_key, mark_key_used, create_keys, list_keys, revoke_key,
 )
 from security import login_required, admin_required, current_user
-from config_loader import load_config
 
 haikunator = Haikunator()
 
@@ -29,10 +31,13 @@ def register():
         return jsonify({"error": "invalid_key"}), 400
     if k["used_by_user_id"] is not None:
         return jsonify({"error": "key_used"}), 400
-    user = create_user(username, generate_password_hash(password))
+    default_cfg = load_config()  # use global config as starting point
+    user = create_user(username, generate_password_hash(password), initial_config_json=json.dumps(default_cfg))
     mark_key_used(key, user["id"])
     session["uid"] = user["id"]
     return jsonify({"username": user["username"], "role": user["role"]})
+
+    
 
 @auth_bp.post("/api/login")
 def login():

@@ -180,29 +180,10 @@
                         <label class="label">LLM</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config.llm.selected" @change="updateConfig" :disabled="!isAdmin">
-                                    <option value="openai_gpt_4o">OpenAI GPT-4o</option>
-                                    <option value="openai_gpt_4o_mini">OpenAI GPT-4o Mini</option>
-                                    <option value="openai_gpt_41">OpenAI GPT-4.1</option>
-                                    <option value="openai_gpt_41_mini">OpenAI GPT-4.1-mini</option>
-                                    <option value="llamacpp-server">Llama.cpp Server</option>
-                                    <option value="openai_o1_mini">OpenAI o1-mini</option>
-                                    <option value="openai_o1">OpenAI o1</option>
-                                    <option value="ollama_gemma3">Ollama Gemma3</option>
-                                    <option value="ollama_llama32">Ollama Llama 3.2</option>
-                                    <option value="ollama_mistral_nemo">Ollama Mistral Nemo</option>
-                                    <option value="google_gemini_15_flash">Google Gemini 1.5 Flash</option>
-                                    <option value="google_gemini_2_flash">Google Gemini 2.0 Flash</option>
-                                    <option value="google_gemini_25_pro">Google Gemini 2.5 Pro</option>
-                                    <option value="anthropic_haiku_35">Anthropic Claude Haiku 3.5</option>
-                                    <option value="anthropic_sonnet_35">Anthropic Claude Sonnet 3.5</option>
-                                    <option value="anthropic_sonnet_37">Anthropic Claude Sonnet 3.7</option>
-                                    <option value="deepseek_r1">DeepSeek R1</option>
-                                    <option value="deepseek_v3">DeepSeek V3</option>
-                                    <option value="meta_llama_33_70B">Meta Llama 3.3 70B</option>
-                                    <option value="meta_llama_31_405B">Meta Llama 3.1 405B</option>
-                                    <option value="meta_llama_4_maverick">Meta Llama 4 Maverick</option>
-                                    <option value="meta_llama_4_scout">Meta Llama 4 Scout</option>
+                                <select v-model="config.llm.selected" @change="updateConfig">
+                                    <option v-for="m in llmOptions" :key="m.key" :value="m.key">
+                                        {{ m.label }}
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -211,8 +192,7 @@
                         <label class="label">Prompt Engineering</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config.prompt_engineering.mode" @change="updateConfig"
-                                    :disabled="!isAdmin">
+                                <select v-model="config.prompt_engineering.mode" @change="updateConfig">
                                     <option value="disabled">disabled</option>
                                     <option value="basic">basic</option>
                                     <option value="system">system</option>
@@ -225,8 +205,7 @@
                         <label class="label">Prompt Injection Filter</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config.prompt_injection_filter.mode" @change="updateConfig"
-                                    :disabled="!isAdmin">
+                                <select v-model="config.prompt_injection_filter.mode" @change="updateConfig">
                                     <option value="disabled">disabled</option>
                                     <option value="azure-prompt-shields">Azure Prompt Shields</option>
                                     <option value="aws-bedrock-guardrails">AWS Bedrock Guardrails</option>
@@ -238,8 +217,7 @@
                         <label class="label">Delimiter Filtering</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config['delimiter-filtering'].mode" @change="updateConfig"
-                                    :disabled="!isAdmin">
+                                <select v-model="config['delimiter-filtering'].mode" @change="updateConfig">
                                     <option value="disabled">disabled</option>
                                     <option value="escape">escape</option>
                                     <option value="remove">remove</option>
@@ -251,7 +229,7 @@
                         <label class="label">Logging Verbose</label>
                         <div class="control">
                             <div class="select">
-                                <select v-model="config.logging.verbose" @change="updateConfig" :disabled="!isAdmin">
+                                <select v-model="config.logging.verbose" @change="updateConfig">
                                     <option :value="true">Enabled</option>
                                     <option :value="false">Disabled</option>
                                 </select>

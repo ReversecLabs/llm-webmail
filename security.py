@@ -33,7 +33,7 @@ OPEN_PATHS = {
     "/api/me",
 }
 ADMIN_POST_PATHS = {
-    ("/api/config", "POST"),
+    ("/api/admin/config", "POST"),
 }
 
 from db import get_today, get_usage, inc_usage
