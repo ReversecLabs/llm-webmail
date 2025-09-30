@@ -1,4 +1,5 @@
 import secrets, datetime
+from haikunator import Haikunator
 from flask import Blueprint, request, jsonify, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import (
@@ -7,6 +8,8 @@ from db import (
 )
 from security import login_required, admin_required, current_user
 from config_loader import load_config
+
+haikunator = Haikunator()
 
 auth_bp = Blueprint("auth_bp", __name__)
 keys_bp = Blueprint("keys_bp", __name__)
@@ -60,7 +63,7 @@ def me():
 def create_signup_keys():
     d = request.get_json(force=True)
     count = int(d.get("count") or 1)
-    tokens = [secrets.token_urlsafe(20) for _ in range(max(1, min(count, 1000)))]
+    tokens = [haikunator.haikunate() for _ in range(max(1, min(count, 1000)))]
     create_keys(tokens)
     return jsonify({"tokens": tokens})
 

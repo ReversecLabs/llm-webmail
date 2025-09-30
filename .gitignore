@@ -3,3 +3,4 @@ venv/
 *.pyc
 __pycache__
 token_stats.json
+data.db*
