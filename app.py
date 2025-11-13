@@ -94,6 +94,10 @@ def initialize_llm(llm_choice):
         elif llm_choice == "meta_llama_4_scout":
             return ChatTogether(model="meta-llama/Llama-4-Scout-17B-16E-Instruct", temperature=0, max_tokens=None, timeout=None, max_retries=2)
     
+    elif llm_choice.startswith("gpt_oss_"):
+        if llm_choice == "gpt_oss_20B":
+            return ChatTogether(model="OpenAI/gpt-oss-20B", temperature=0, max_tokens=None, timeout=None, max_retries=2)
+
     # Default fallback to OpenAI's GPT-4o
     logging.warning(f"Unknown LLM choice '{llm_choice}', defaulting to openai_gpt_4o")
     return ChatOpenAI(model="gpt-4o", max_tokens=None, temperature=0)
@@ -112,7 +116,8 @@ VALID_LLM_OPTIONS = [
     "google_gemini_15_flash", "google_gemini_2_flash", "google_gemini_25_pro",
     "anthropic_haiku_35", "anthropic_sonnet_35", "anthropic_sonnet_37", 
     "deepseek_r1", "deepseek_v3", 
-    "meta_llama_33_70B", "meta_llama_31_405B", "meta_llama_4_maverick", "meta_llama_4_scout"
+    "meta_llama_33_70B", "meta_llama_31_405B", "meta_llama_4_maverick", "meta_llama_4_scout",
+    "gpt-oss-20B"
 ]
 
 def remove_think_tags(text):
