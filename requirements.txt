@@ -10,4 +10,4 @@ transformers
 toml
 boto3
 langchain-core
-pipenv
+python-dotenv
