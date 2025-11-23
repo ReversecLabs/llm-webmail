@@ -1,4 +1,5 @@
 [llm]
+# options: "openai_gpt_4o", "google_gemini_2_flash", "gpt_oss_20B", etc.
 selected = "openai_gpt_4o"
 
 [prompt_engineering]

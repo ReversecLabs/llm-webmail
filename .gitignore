@@ -1,5 +1,6 @@
-venv/
+.venv/
 .env
 *.pyc
 __pycache__
 token_stats.json
+.DS_Store

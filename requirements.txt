@@ -9,3 +9,5 @@ torch
 transformers
 toml
 boto3
+langchain-core
+python-dotenv
