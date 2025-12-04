@@ -172,3 +172,15 @@ def inc_usage(user_id, date):
         )
     conn.commit()
     conn.close()
+
+def reset_usage(user_id, date):
+    conn = get_conn()
+    conn.execute("DELETE FROM daily_usage WHERE user_id=? AND date=?", (user_id, date))
+    conn.commit()
+    conn.close()
+
+def reset_all_usage(date):
+    conn = get_conn()
+    conn.execute("DELETE FROM daily_usage WHERE date=?", (date,))
+    conn.commit()
+    conn.close()

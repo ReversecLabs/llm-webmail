@@ -265,7 +265,13 @@
                                 <tr>
                                     <th>User</th>
                                     <th>Role</th>
-                                    <th style="width:240px">Actions</th>
+                                    <th style="width:340px">
+                                        Actions
+                                        <button class="button is-small is-warning is-light is-pulled-right"
+                                            @click="resetAllQuotas">
+                                            Reset All Quotas
+                                        </button>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -275,6 +281,8 @@
                                     <td>
                                         <button class="button is-small" @click="resetUserPassword(u.username)">Reset
                                             PW</button>
+                                        <button class="button is-small is-warning"
+                                            @click="resetUserQuota(u.username)">Reset Quota</button>
                                         <button class="button is-small is-danger"
                                             @click="deleteUser(u.username)">Delete</button>
                                     </td>

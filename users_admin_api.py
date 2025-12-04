@@ -2,7 +2,7 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash
 from security import admin_required
-from db import get_conn
+from db import get_conn, get_today, reset_usage, reset_all_usage, get_user_by_username
 
 users_admin_bp = Blueprint("users_admin_bp", __name__)
 
@@ -43,7 +43,23 @@ def delete_user():
         return jsonify({"error": "not_found"}), 404
     uid = u["id"]
     # clean up usage rows; do NOT “free” old signup keys unless you want that behavior
-    c.execute("DELETE FROM daily_usage WHERE user_id=?", (uid,))
     c.execute("DELETE FROM users WHERE id=?", (uid,))
     c.commit()
+    return jsonify({"ok": True})
+
+@users_admin_bp.post("/api/admin/users/reset-quota")
+@admin_required
+def reset_quota():
+    d = request.get_json(force=True)
+    username = (d.get("username") or "").strip()
+    today = get_today()
+    
+    if username:
+        u = get_user_by_username(username)
+        if not u:
+            return jsonify({"error": "not_found"}), 404
+        reset_usage(u["id"], today)
+    else:
+        reset_all_usage(today)
+        
     return jsonify({"ok": True})

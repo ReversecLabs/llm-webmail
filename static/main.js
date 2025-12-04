@@ -273,6 +273,26 @@ createApp({
       if (!r.ok) return alert('Failed to delete user');
       await this.fetchUsers();
     },
+    async resetUserQuota(username) {
+      if (!this.isAdmin) return;
+      if (!confirm(`Reset daily quota for ${username}?`)) return;
+      const r = await fetch('/api/admin/users/reset-quota', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      if (!r.ok) alert('Failed to reset quota');
+      else alert('Quota reset successfully');
+    },
+    async resetAllQuotas() {
+      if (!this.isAdmin) return;
+      if (!confirm(`Reset daily quota for ALL users?`)) return;
+      const r = await fetch('/api/admin/users/reset-quota', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      if (!r.ok) alert('Failed to reset quotas');
+      else alert('All quotas reset successfully');
+    },
     openAdminConsole() {
       this.adminConsoleOpen = true;
       this.adminTab = 'users';
