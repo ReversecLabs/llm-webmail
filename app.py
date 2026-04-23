@@ -40,7 +40,7 @@ TOKEN_STATS = {}
 def get_allowed_models_from_global():
     gcfg = load_config()
     models = gcfg.get("llm", {}).get("models", [])
-    allowed = [m["key"] for m in models if m.get("enabled")]
+    allowed = [m.get("name", m.get("key")) for m in models if m.get("enabled")]
     return allowed, models
 
 def record_token_usage(usage, llm_name):
@@ -55,89 +55,38 @@ def initialize_llm(llm_choice):
     """Initialize and return only the selected LLM based on config."""
     logging.info(f"Initializing LLM: {llm_choice}")
     
-    if llm_choice.startswith("openai_"):
-        if llm_choice == "openai_gpt_4o":
-            return ChatOpenAI(model="gpt-4o", max_tokens=None, temperature=0)
-        elif llm_choice == "openai_gpt_4o_mini":
-            return ChatOpenAI(model="gpt-4o-mini", max_tokens=None, temperature=0)
-        elif llm_choice == "openai_gpt_41":
-            return ChatOpenAI(model="gpt-4.1", max_tokens=None, temperature=0)
-        elif llm_choice == "openai_gpt_41_mini":
-            return ChatOpenAI(model="gpt-4.1-mini", max_tokens=None, temperature=0)
-        elif llm_choice == "openai_o1_mini":
-            return ChatOpenAI(model="o1-mini", max_tokens=None)
-        elif llm_choice == "openai_o1":
-            return ChatOpenAI(model="o1", max_tokens=None)
+    allowed, models = get_allowed_models_from_global()
+    model_cfg = next((m for m in models if m.get("name", m.get("key")) == llm_choice), None)
     
-    if llm_choice.startswith("llamacpp"):
-        return ChatOpenAI(base_url="http://localhost:8080/", max_tokens=None, temperature=0)
-
-    if llm_choice.startswith("ollama_"):
-        from langchain_ollama import ChatOllama
-        if llm_choice == "ollama_gemma3":
-            return ChatOllama(model="gemma3", max_tokens=None, temperature=0)
-        elif llm_choice == "ollama_llama32":
-            return ChatOllama(model="llama3.2", max_tokens=None, temperature=0)
-        elif llm_choice == "ollama_mistral_nemo":
-            return ChatOllama(model="mistral-nemo", max_tokens=None, temperature=0)
-
-    elif llm_choice.startswith("google_"):
-        if llm_choice == "google_gemini_15_flash":
-            return ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-        elif llm_choice == "google_gemini_2_flash":
-            return ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-        elif llm_choice == "google_gemini_25_pro":
-            return ChatGoogleGenerativeAI(model="gemini-2.5-pro-exp-03-25", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-    
-    elif llm_choice.startswith("anthropic_"):
-        if llm_choice == "anthropic_haiku_35":
-            return ChatBedrock(model_id="us.anthropic.claude-3-5-haiku-20241022-v1:0", model_kwargs=dict(temperature=0))
-        elif llm_choice == "anthropic_sonnet_35":
-            return ChatBedrock(model_id="us.anthropic.claude-3-5-sonnet-20241022-v2:0", model_kwargs=dict(temperature=0))
-        elif llm_choice == "anthropic_sonnet_37":
-            return ChatBedrock(model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0", model_kwargs=dict(temperature=0))
-    
-    elif llm_choice.startswith("deepseek_"):
-        if llm_choice == "deepseek_r1":
-            return ChatTogether(model="deepseek-ai/DeepSeek-R1", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-        elif llm_choice == "deepseek_v3":
-            return ChatTogether(model="deepseek-ai/DeepSeek-V3", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-    
-    elif llm_choice.startswith("meta_"):
-        if llm_choice == "meta_llama_33_70B":
-            return ChatTogether(model="meta-llama/Llama-3.3-70B-Instruct-Turbo", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-        elif llm_choice == "meta_llama_31_405B":
-            return ChatTogether(model="meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-        elif llm_choice == "meta_llama_4_maverick":
-            return ChatTogether(model="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-        elif llm_choice == "meta_llama_4_scout":
-            return ChatTogether(model="meta-llama/Llama-4-Scout-17B-16E-Instruct", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-    
-    elif llm_choice.startswith("together_"):
-        if llm_choice == "together_qwen3-next-80b-a3b":
-            return ChatTogether(model="Qwen/Qwen3-Next-80B-A3B-Instruct", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-    
-    # Default fallback to OpenAI's GPT-4o
-    logging.warning(f"Unknown LLM choice '{llm_choice}', defaulting to openai_gpt_4o")
-    return ChatOpenAI(model="gpt-4o", max_tokens=None, temperature=0)
+    if model_cfg:
+        provider = model_cfg.get("provider")
+        params = model_cfg.get("params", {})
+        
+        if provider == "openai":
+            return ChatOpenAI(**params)
+        elif provider == "anthropic_bedrock":
+            return ChatBedrock(**params)
+        elif provider == "together":
+            return ChatTogether(**params)
+        elif provider == "llamacpp":
+            return ChatOpenAI(**params)
+        elif provider == "google":
+            return ChatGoogleGenerativeAI(**params)
+        elif provider == "ollama":
+            from langchain_ollama import ChatOllama
+            return ChatOllama(**params)
+            
+    # Default fallback to Qwen3 Coder Next FP8
+    logging.warning(f"Unknown LLM choice '{llm_choice}', defaulting to together_qwen3-coder-next-fp8")
+    return ChatTogether(model="Qwen/Qwen3-Coder-Next-FP8", temperature=0, max_tokens=None, timeout=None, max_retries=2)
 
 # Get the initial LLM choice from config
-llm_choice = config.get("llm", {}).get("selected", "openai_gpt_4o")
+llm_choice = config.get("llm", {}).get("selected", "together_qwen3-coder-next-fp8")
 # Initialize the selected LLM
 llm = initialize_llm(llm_choice)
 
 
-# Define list of valid LLM options
-VALID_LLM_OPTIONS = [
-    "openai_gpt_4o", "openai_gpt_4o_mini", "openai_gpt_41", "openai_gpt_41_mini",
-    "openai_o1_mini", "openai_o1",
-    "llamacpp-server",
-    "ollama_llama32","ollama_gemma3", "ollama_mistral_nemo",
-    "google_gemini_15_flash", "google_gemini_2_flash", "google_gemini_25_pro",
-    "anthropic_haiku_35", "anthropic_sonnet_35", "anthropic_sonnet_37", 
-    "deepseek_r1", "deepseek_v3", 
-    "meta_llama_33_70B", "meta_llama_31_405B", "meta_llama_4_maverick", "meta_llama_4_scout"
-]
+# Definition of LLM options is now entirely driven by config.toml
 
 def remove_think_tags(text):
     return re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
@@ -209,7 +158,7 @@ def llm_summary(documents, cfg, llm_obj):
     try:
         summary = llm_obj.invoke(messages)
         # record using the actual model choice from cfg
-        llm_name = cfg.get("llm", {}).get("selected", "openai_gpt_4o")
+        llm_name = cfg.get("llm", {}).get("selected", "together_qwen3-coder-next-fp8")
         if hasattr(summary, "usage_metadata"):
             record_token_usage(summary.usage_metadata, llm_name)
         return remove_think_tags(summary.content)
@@ -318,9 +267,9 @@ def summarize():
 
     # pick model with allowlist enforcement + fallback
     allowed, _models = get_allowed_models_from_global()
-    sel = cfg.get("llm", {}).get("selected", "openai_gpt_4o")
+    sel = cfg.get("llm", {}).get("selected", "together_qwen3-coder-next-fp8")
     if sel not in allowed:
-        sel = (allowed[0] if allowed else "openai_gpt_4o")
+        sel = (allowed[0] if allowed else "together_qwen3-coder-next-fp8")
 
     llm_local = initialize_llm(sel)
     return jsonify({"summary": llm_summary(documents, cfg, llm_local)})

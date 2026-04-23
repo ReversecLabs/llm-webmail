@@ -1,125 +1,137 @@
 [llm]
-selected = "together_qwen3-next-80b-a3b"
+selected = "together_qwen3-coder-next-fp8"
 [[llm.models]]
 enabled = true
-key = "openai_gpt_4o"
-label = "OpenAI GPT-4o"
+name = "openai_gpt_5"
+provider = "openai"
+readable_name = "OpenAI GPT-5"
 
+[llm.models.params]
+model = "gpt-5"
+temperature = 1
 [[llm.models]]
 enabled = true
-key = "openai_gpt_4o_mini"
-label = "OpenAI GPT-4o mini"
+name = "openai_gpt_5_mini"
+provider = "openai"
+readable_name = "OpenAI GPT-5 Mini"
 
-[[llm.models]]
-enabled = false
-key = "openai_gpt_41"
-label = "OpenAI GPT-4.1"
-
-[[llm.models]]
-enabled = false
-key = "openai_gpt_41_mini"
-label = "OpenAI GPT-4.1 mini"
-
-[[llm.models]]
-enabled = false
-key = "openai_o1_mini"
-label = "OpenAI o1-mini"
-
-[[llm.models]]
-enabled = false
-key = "openai_o1"
-label = "OpenAI o1"
-
-[[llm.models]]
-enabled = false
-key = "llamacpp-server"
-label = "llama.cpp Server"
-
-[[llm.models]]
-enabled = false
-key = "ollama_gemma3"
-label = "Ollama Gemma 3"
-
-[[llm.models]]
-enabled = false
-key = "ollama_llama32"
-label = "Ollama Llama 3.2"
-
-[[llm.models]]
-enabled = false
-key = "ollama_mistral_nemo"
-label = "Ollama Mistral-Nemo"
-
-[[llm.models]]
-enabled = false
-key = "google_gemini_15_flash"
-label = "Google Gemini 1.5 Flash"
-
+[llm.models.params]
+model = "gpt-5-mini"
+temperature = 1
 [[llm.models]]
 enabled = true
-key = "google_gemini_2_flash"
-label = "Google Gemini 2.0 Flash"
+name = "openai_gpt_4o"
+provider = "openai"
+readable_name = "OpenAI GPT-4o"
 
+[llm.models.params]
+model = "gpt-4o"
+temperature = 0
+[[llm.models]]
+enabled = true
+name = "openai_gpt_4o_mini"
+provider = "openai"
+readable_name = "OpenAI GPT-4o Mini"
+
+[llm.models.params]
+model = "gpt-4o-mini"
+temperature = 0
+[[llm.models]]
+enabled = true
+name = "anthropic_haiku_35"
+provider = "anthropic_bedrock"
+readable_name = "Anthropic Claude Haiku 3.5"
+
+[llm.models.params]
+model_id = "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+temperature = 0
+[llm.models.params.model_kwargs]
+temperature = 0
+[[llm.models]]
+enabled = true
+name = "together_qwen3-coder-next-fp8"
+provider = "together"
+readable_name = "Qwen3-Coder-Next-FP8"
+
+[llm.models.params]
+max_retries = 2
+model = "Qwen/Qwen3-Coder-Next-FP8"
+temperature = 0
 [[llm.models]]
 enabled = false
-key = "google_gemini_25_pro"
-label = "Google Gemini 2.5 Pro (exp)"
+name = "together_gpt-oss-20b"
+provider = "together"
+readable_name = "OpenAI GPT-OSS-20B"
 
+[llm.models.params]
+max_retries = 2
+model = "openai/gpt-oss-20b"
+temperature = 0
 [[llm.models]]
 enabled = true
-key = "anthropic_haiku_35"
-label = "Anthropic Claude 3.5 Haiku"
+name = "together_gpt-oss-120b"
+provider = "together"
+readable_name = "OpenAI GPT-OSS-120B"
 
+[llm.models.params]
+max_retries = 2
+model = "openai/gpt-oss-120b"
+temperature = 0
 [[llm.models]]
 enabled = true
-key = "anthropic_sonnet_35"
-label = "Anthropic Claude 3.5 Sonnet"
+name = "together_kimi_k2_5"
+provider = "together"
+readable_name = "Kimi K2.5"
 
+[llm.models.params]
+max_retries = 2
+model = "moonshotai/Kimi-K2.5"
+temperature = 0
 [[llm.models]]
 enabled = true
-key = "anthropic_sonnet_37"
-label = "Anthropic Claude 3.7 Sonnet"
+name = "together_qwen35_397b"
+provider = "together"
+readable_name = "Qwen3.5 397B A17B"
 
-[[llm.models]]
-enabled = false
-key = "deepseek_r1"
-label = "DeepSeek R1"
-
-[[llm.models]]
-enabled = true
-key = "deepseek_v3"
-label = "DeepSeek V3"
-
+[llm.models.params]
+max_retries = 2
+model = "Qwen/Qwen3.5-397B-A17B"
+temperature = 0
 [[llm.models]]
 enabled = true
-key = "meta_llama_33_70B"
-label = "Meta Llama 3.3 70B Instruct"
+name = "together_gemma_4_31b_it"
+provider = "together"
+readable_name = "Gemma 4 31B IT"
 
-[[llm.models]]
-enabled = false
-key = "meta_llama_31_405B"
-label = "Meta Llama 3.1 405B Instruct"
-
-[[llm.models]]
-enabled = false
-key = "meta_llama_4_maverick"
-label = "Meta Llama 4 Maverick 17B"
-
+[llm.models.params]
+max_retries = 2
+model = "google/gemma-4-31B-it"
+temperature = 0
 [[llm.models]]
 enabled = true
-key = "meta_llama_4_scout"
-label = "Meta Llama 4 Scout 17B"
+name = "together_minimax_m2_7"
+provider = "together"
+readable_name = "MiniMax M2.7"
 
+[llm.models.params]
+max_retries = 2
+model = "MiniMaxAI/MiniMax-M2.7"
+temperature = 0
 [[llm.models]]
 enabled = true
-key = "together_qwen3-next-80b-a3b"
-label = "Qwen3-Next-80B-A3B-Instruct"
+name = "llamacpp"
+provider = "llamacpp"
+readable_name = "Llama.CPP Server"
+
+[llm.models.params]
+base_url = "http://localhost:8080/"
+temperature = 0
 
 [prompt_engineering]
 mode = "disabled"
 
 [prompt_injection_filter]
-mode = "disabled"
+mode = "aws-bedrock-guardrails"
 
 [delimiter-filtering]
 mode = "disabled"
@@ -129,7 +141,7 @@ verbose = true
 
 [admin]
 username = "admin"
-password = "password"
+password = "mwrisalive"
 
 [server]
 session_secret = "CHANGE_ME_RANDOM_LONG"

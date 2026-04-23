@@ -181,8 +181,8 @@
                         <div class="control">
                             <div class="select">
                                 <select v-model="config.llm.selected" @change="updateConfig">
-                                    <option v-for="m in llmOptions" :key="m.key" :value="m.key">
-                                        {{ m.label }}
+                                    <option v-for="m in llmOptions" :key="m.name || m.key" :value="m.name || m.key">
+                                        {{ m.readable_name || m.label }}
                                     </option>
                                 </select>
                             </div>
