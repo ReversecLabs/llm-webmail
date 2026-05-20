@@ -76,12 +76,12 @@ def initialize_llm(llm_choice):
             from langchain_ollama import ChatOllama
             return ChatOllama(**params)
             
-    # Default fallback to Qwen3 Coder Next FP8
-    logging.warning(f"Unknown LLM choice '{llm_choice}', defaulting to together_qwen3-coder-next-fp8")
-    return ChatTogether(model="Qwen/Qwen3-Coder-Next-FP8", temperature=0, max_tokens=None, timeout=None, max_retries=2)
+    # Default fallback to MiniMax M2.7
+    logging.warning(f"Unknown LLM choice '{llm_choice}', defaulting to together_minimax_m2_7")
+    return ChatTogether(model="MiniMaxAI/MiniMax-M2.7", temperature=0, max_tokens=None, timeout=None, max_retries=2)
 
 # Get the initial LLM choice from config
-llm_choice = config.get("llm", {}).get("selected", "together_qwen3-coder-next-fp8")
+llm_choice = config.get("llm", {}).get("selected", "together_minimax_m2_7")
 # Initialize the selected LLM
 llm = initialize_llm(llm_choice)
 
@@ -158,7 +158,7 @@ def llm_summary(documents, cfg, llm_obj):
     try:
         summary = llm_obj.invoke(messages)
         # record using the actual model choice from cfg
-        llm_name = cfg.get("llm", {}).get("selected", "together_qwen3-coder-next-fp8")
+        llm_name = cfg.get("llm", {}).get("selected", "together_minimax_m2_7")
         if hasattr(summary, "usage_metadata"):
             record_token_usage(summary.usage_metadata, llm_name)
         return remove_think_tags(summary.content)
@@ -267,9 +267,9 @@ def summarize():
 
     # pick model with allowlist enforcement + fallback
     allowed, _models = get_allowed_models_from_global()
-    sel = cfg.get("llm", {}).get("selected", "together_qwen3-coder-next-fp8")
+    sel = cfg.get("llm", {}).get("selected", "together_minimax_m2_7")
     if sel not in allowed:
-        sel = (allowed[0] if allowed else "together_qwen3-coder-next-fp8")
+        sel = (allowed[0] if allowed else "together_minimax_m2_7")
 
     llm_local = initialize_llm(sel)
     return jsonify({"summary": llm_summary(documents, cfg, llm_local)})

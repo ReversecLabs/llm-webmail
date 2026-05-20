@@ -1,5 +1,5 @@
 [llm]
-selected = "together_qwen3-coder-next-fp8"
+selected = "together_minimax_m2_7"
 [[llm.models]]
 enabled = true
 name = "openai_gpt_5"
@@ -48,7 +48,7 @@ temperature = 0
 [llm.models.params.model_kwargs]
 temperature = 0
 [[llm.models]]
-enabled = true
+enabled = false
 name = "together_qwen3-coder-next-fp8"
 provider = "together"
 readable_name = "Qwen3-Coder-Next-FP8"
