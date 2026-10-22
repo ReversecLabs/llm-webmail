@@ -4,6 +4,11 @@ archive="${1:?archive is required}"
 app_dir="${2:?app directory is required}"
 pane="${3:?pane is required}"
 revision="${4:?revision is required}"
+update_models="${5:-0}"
+if [[ ! "$update_models" =~ ^[01]$ ]]; then
+    echo "Invalid model-update flag." >&2
+    exit 1
+fi
 if [[ ! "$archive" =~ ^/tmp/llmwebmail-deploy\.[A-Za-z0-9]+\.tar\.gz$ || ! "$app_dir" =~ ^/[A-Za-z0-9._/-]+$ || "$app_dir" == / || ! "$pane" =~ ^%[0-9]+$ || ! "$revision" =~ ^[a-f0-9]{40}$ ]]; then
     echo "Invalid deployment arguments." >&2
     exit 1
@@ -34,4 +39,7 @@ rsync -a \
     --exclude='token_stats.json' --exclude='webmail.log' \
     "$stage/" "$app_dir/"
 printf '%s\n' "$revision" > "$app_dir/.deployed-revision"
+if [[ "$update_models" == 1 ]]; then
+    "$app_dir/venv/bin/python" "$app_dir/scripts/update_models.py"
+fi
 "$app_dir/scripts/start.sh" "$app_dir" "$pane"

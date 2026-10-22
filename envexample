@@ -1,4 +1,8 @@
 # Fill in the API Keys for the LLMs and guardrails you want to use
+OPENROUTER_API_KEY=
+OPENROUTER_APP_NAME=LLM Webmail
+OPENROUTER_SITE_URL=https://llmwebmail.fs-playground.com/
+
 OPENAI_API_KEY=
 GOOGLE_API_KEY=
 DEEPSEEK_API_KEY=

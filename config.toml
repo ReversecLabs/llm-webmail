@@ -1,5 +1,131 @@
 [llm]
-selected = "together_minimax_m2_7"
+selected = "openrouter_qwen38_flash"
+[[llm.models]]
+name = "openrouter_qwen36_35b_a3b"
+provider = "openrouter"
+readable_name = "Qwen 3.6 35B A3B"
+enabled = true
+
+[llm.models.params]
+model = "qwen/qwen3.6-35b-a3b"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_qwen38_flash"
+provider = "openrouter"
+readable_name = "Qwen 3.8 Flash"
+enabled = true
+
+[llm.models.params]
+model = "qwen/qwen3.8-flash"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_qwen38_27b"
+provider = "openrouter"
+readable_name = "Qwen 3.8 27B"
+enabled = true
+
+[llm.models.params]
+model = "qwen/qwen3.8-27b"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_deepseek_v4_flash_0731"
+provider = "openrouter"
+readable_name = "DeepSeek V4 Flash 0731"
+enabled = true
+
+[llm.models.params]
+model = "deepseek/deepseek-v4-flash-0731"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_deepseek_v4_pro_0813"
+provider = "openrouter"
+readable_name = "DeepSeek V4 Pro 0813"
+enabled = true
+
+[llm.models.params]
+model = "deepseek/deepseek-v4-pro-0813"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_glm53_flash"
+provider = "openrouter"
+readable_name = "GLM 5.3 Flash"
+enabled = true
+
+[llm.models.params]
+model = "z-ai/glm-5.3-flash"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_claude_sonnet_5"
+provider = "openrouter"
+readable_name = "Claude Sonnet 5"
+enabled = true
+
+[llm.models.params]
+model = "anthropic/claude-sonnet-5"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_gpt_56_luna"
+provider = "openrouter"
+readable_name = "OpenAI GPT-5.6 Luna"
+enabled = true
+
+[llm.models.params]
+model = "openai/gpt-5.6-luna"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_gpt_56_terra"
+provider = "openrouter"
+readable_name = "OpenAI GPT-5.6 Terra"
+enabled = true
+
+[llm.models.params]
+model = "openai/gpt-5.6-terra"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_gemini_37_flash"
+provider = "openrouter"
+readable_name = "Google Gemini 3.7 Flash"
+enabled = true
+
+[llm.models.params]
+model = "google/gemini-3.7-flash"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_gemini_25_flash"
+provider = "openrouter"
+readable_name = "Google Gemini 2.5 Flash"
+enabled = true
+
+[llm.models.params]
+model = "google/gemini-2.5-flash"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_minimax_m3"
+provider = "openrouter"
+readable_name = "MiniMax M3"
+enabled = true
+
+[llm.models.params]
+model = "minimax/minimax-m3"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_kimi_k3"
+provider = "openrouter"
+readable_name = "Kimi K3 (OpenRouter)"
+enabled = true
+
+[llm.models.params]
+model = "moonshotai/kimi-k3"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_gemma4_31b"
+provider = "openrouter"
+readable_name = "Gemma 4 31B (OpenRouter)"
+enabled = true
+
+[llm.models.params]
+model = "google/gemma-4-31b-it"
+max_retries = 2
 [[llm.models]]
 enabled = true
 name = "openai_gpt_5"
@@ -37,7 +163,7 @@ readable_name = "OpenAI GPT-4o Mini"
 model = "gpt-4o-mini"
 temperature = 0
 [[llm.models]]
-enabled = true
+enabled = false
 name = "anthropic_haiku_35"
 provider = "anthropic_bedrock"
 readable_name = "Anthropic Claude Haiku 3.5"
@@ -78,7 +204,7 @@ max_retries = 2
 model = "openai/gpt-oss-120b"
 temperature = 0
 [[llm.models]]
-enabled = true
+enabled = false
 name = "together_kimi_k2_5"
 provider = "together"
 readable_name = "Kimi K2.5"
@@ -88,7 +214,7 @@ max_retries = 2
 model = "moonshotai/Kimi-K2.5"
 temperature = 0
 [[llm.models]]
-enabled = true
+enabled = false
 name = "together_qwen35_397b"
 provider = "together"
 readable_name = "Qwen3.5 397B A17B"
@@ -98,7 +224,7 @@ max_retries = 2
 model = "Qwen/Qwen3.5-397B-A17B"
 temperature = 0
 [[llm.models]]
-enabled = true
+enabled = false
 name = "together_gemma_4_31b_it"
 provider = "together"
 readable_name = "Gemma 4 31B IT"
@@ -108,7 +234,7 @@ max_retries = 2
 model = "google/gemma-4-31B-it"
 temperature = 0
 [[llm.models]]
-enabled = true
+enabled = false
 name = "together_minimax_m2_7"
 provider = "together"
 readable_name = "MiniMax M2.7"
@@ -118,7 +244,7 @@ max_retries = 2
 model = "MiniMaxAI/MiniMax-M2.7"
 temperature = 0
 [[llm.models]]
-enabled = true
+enabled = false
 name = "llamacpp"
 provider = "llamacpp"
 readable_name = "Llama.CPP Server"
@@ -126,6 +252,15 @@ readable_name = "Llama.CPP Server"
 [llm.models.params]
 base_url = "http://localhost:8080/"
 temperature = 0
+[[llm.models]]
+name = "anthropic_haiku_55"
+provider = "anthropic_bedrock"
+readable_name = "Claude Haiku 5.5 (Bedrock)"
+enabled = true
+
+[llm.models.params]
+model_id = "us.anthropic.claude-haiku-5-5"
+region_name = "us-east-1"
 
 [prompt_engineering]
 mode = "disabled"

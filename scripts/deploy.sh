@@ -5,8 +5,9 @@ repo_dir="$(cd "$script_dir/.." && pwd)"
 host="${DEPLOY_HOST:-azureuser@llmbank.fs-playground.com}"
 app_dir="${DEPLOY_DIR:-/home/azureuser/llm-webmail}"
 pane="${DEPLOY_PANE:-%1}"
+update_models="${DEPLOY_UPDATE_MODELS:-0}"
 ssh_config="${DEPLOY_SSH_CONFIG:-/home/kyuz0/.ssh/config}"
-if [[ ! "$app_dir" =~ ^/[A-Za-z0-9._/-]+$ || ! "$pane" =~ ^%[0-9]+$ ]]; then
+if [[ ! "$app_dir" =~ ^/[A-Za-z0-9._/-]+$ || ! "$pane" =~ ^%[0-9]+$ || ! "$update_models" =~ ^[01]$ ]]; then
     echo "Invalid deployment path or pane ID." >&2
     exit 1
 fi
@@ -36,5 +37,5 @@ ssh_args=(-F "$ssh_config" -o BatchMode=yes)
 remote_archive="/tmp/$(basename "$archive")"
 scp "${ssh_args[@]}" "$archive" "$host:$remote_archive"
 ssh "${ssh_args[@]}" "$host" \
-    "bash -s -- '$remote_archive' '$app_dir' '$pane' '$revision'" < "$script_dir/install_remote.sh"
+    "bash -s -- '$remote_archive' '$app_dir' '$pane' '$revision' '$update_models'" < "$script_dir/install_remote.sh"
 echo "Deployed webmail revision $revision."

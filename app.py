@@ -5,11 +5,8 @@ import json
 import logging
 
 from flask import Flask, jsonify, request, render_template
-from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_aws import ChatBedrock
-from langchain_together import ChatTogether
 from dotenv import load_dotenv
+from llm_providers import create_chat_model
 
 # Guardrails 
 from guardrails.meta_prompt_guard import meta_scan_for_injections
@@ -57,39 +54,22 @@ def record_token_usage(usage, llm_name):
 def initialize_llm(llm_choice):
     """Initialize and return only the selected LLM based on config."""
     logging.info(f"Initializing LLM: {llm_choice}")
-    
     allowed, models = get_allowed_models_from_global()
-    model_cfg = next((m for m in models if m.get("name", m.get("key")) == llm_choice), None)
-    
-    if model_cfg:
-        provider = model_cfg.get("provider")
-        params = model_cfg.get("params", {})
-        
-        if provider == "openai":
-            return ChatOpenAI(**params)
-        elif provider == "anthropic_bedrock":
-            return ChatBedrock(**params)
-        elif provider == "together":
-            return ChatTogether(**params)
-        elif provider == "llamacpp":
-            return ChatOpenAI(**params)
-        elif provider == "google":
-            return ChatGoogleGenerativeAI(**params)
-        elif provider == "ollama":
-            from langchain_ollama import ChatOllama
-            return ChatOllama(**params)
-            
-    # Default fallback to MiniMax M2.7
-    logging.warning(f"Unknown LLM choice '{llm_choice}', defaulting to together_minimax_m2_7")
-    return ChatTogether(model="MiniMaxAI/MiniMax-M2.7", temperature=0, max_tokens=None, timeout=None, max_retries=2)
-
-# Get the initial LLM choice from config
-llm_choice = config.get("llm", {}).get("selected", "together_minimax_m2_7")
-# Initialize the selected LLM
-llm = initialize_llm(llm_choice)
+    model_cfg = next((m for m in models if m.get("name", m.get("key")) == llm_choice and llm_choice in allowed), None)
+    if model_cfg is None:
+        raise ValueError(f"Model is unavailable or disabled: {llm_choice}")
+    return create_chat_model(model_cfg)
 
 
-# Definition of LLM options is now entirely driven by config.toml
+def resolve_model_choice(cfg):
+    allowed, _models = get_allowed_models_from_global()
+    if not allowed:
+        raise RuntimeError("No enabled models are configured")
+    selected = cfg.get("llm", {}).get("selected")
+    if selected in allowed:
+        return selected
+    default = load_config().get("llm", {}).get("selected")
+    return default if default in allowed else allowed[0]
 
 def remove_think_tags(text):
     return re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
@@ -161,7 +141,7 @@ def llm_summary(documents, cfg, llm_obj):
     try:
         summary = llm_obj.invoke(messages)
         # record using the actual model choice from cfg
-        llm_name = cfg.get("llm", {}).get("selected", "together_minimax_m2_7")
+        llm_name = cfg["llm"]["selected"]
         if hasattr(summary, "usage_metadata"):
             record_token_usage(summary.usage_metadata, llm_name)
         return remove_think_tags(summary.content)
@@ -271,11 +251,8 @@ def summarize():
 
     cfg = effective_config_for_request()
 
-    # pick model with allowlist enforcement + fallback
-    allowed, _models = get_allowed_models_from_global()
-    sel = cfg.get("llm", {}).get("selected", "together_minimax_m2_7")
-    if sel not in allowed:
-        sel = (allowed[0] if allowed else "together_minimax_m2_7")
+    sel = resolve_model_choice(cfg)
+    cfg = merge_training_config(cfg, {"llm": {"selected": sel}})
 
     llm_local = initialize_llm(sel)
     return jsonify({"summary": llm_summary(documents, cfg, llm_local)})
@@ -306,7 +283,9 @@ def remove_malicious():
 def get_config():
     """Return training controls and the public model catalog."""
     base_cfg = load_config()
-    return jsonify(public_config(effective_config_for_request(), base_cfg))
+    cfg = effective_config_for_request()
+    cfg = merge_training_config(cfg, {"llm": {"selected": resolve_model_choice(cfg)}})
+    return jsonify(public_config(cfg, base_cfg))
 
 
 @app.route("/api/config", methods=["POST"])

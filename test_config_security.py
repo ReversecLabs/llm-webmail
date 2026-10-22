@@ -264,6 +264,25 @@ class ConfigSecurityTests(unittest.TestCase):
         self.db.revoke_key("revoked-code")
         self.assertEqual(self.client.post("/api/register", json={"username": "bad", "password": "pw", "key": "revoked-code"}).status_code, 400)
 
+    def test_stale_model_selection_falls_back_to_enabled_global_default(self):
+        self.db.set_user_config(self.participant["id"], {"llm": {"selected": "disabled-model"}})
+        self.sign_in()
+        self.assertEqual(self.client.get("/api/config").json["llm"]["selected"], "training-model")
+        self.assertEqual(self.module.resolve_model_choice({"llm": {"selected": "unknown"}}), "training-model")
+        with self.assertRaisesRegex(ValueError, "unavailable or disabled"):
+            self.module.initialize_llm("disabled-model")
+
+    def test_summary_uses_configured_provider_and_records_actual_fallback_model(self):
+        self.sign_in()
+        self.db.set_user_config(self.participant["id"], {"llm": {"selected": "disabled-model"}})
+        llm = Mock()
+        llm.invoke.return_value = Mock(content="The budget of GBP 1200 is approved.", usage_metadata={"input_tokens": 10, "output_tokens": 8})
+        with patch.object(self.module, "create_chat_model", return_value=llm) as create:
+            response = self.client.post("/api/summarize", json={"documents": ["Budget approved: GBP 1200."]})
+        self.assertEqual(response.status_code, 200)
+        create.assert_called_once_with(self.cfg["llm"]["models"][0])
+        self.assertEqual(self.module.TOKEN_STATS["training-model"]["output_tokens"], 8)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -7,6 +7,8 @@
 - The deployer sends a source archive over SSH; server-side Git access is not required.
 - The remote Git checkout contains historical custom changes. Never reset or clean it. Deployment records the source commit in `.deployed-revision`.
 - The existing virtualenv is reused. The deployer stops if requirements differ; dependency changes require their own reviewed installation.
+- For an explicitly requested model-catalog update, use `DEPLOY_UPDATE_MODELS=1 ./scripts/deploy.sh`. After backing up the stopped app, this updates only the remote TOML's `llm` section from the reviewed `model_catalog.json`; authentication, guardrails and quota settings are preserved. Ordinary deployments do not change the server config.
+- OpenRouter uses `OPENROUTER_API_KEY` in the remote `.env`. Keys are never included in the model catalog or public model list. Keep working direct-provider credentials for their configured options.
 
 ## Persistent state and authentication
 
@@ -26,4 +28,4 @@ Never replace or delete `config.toml`, `.env`, `venv/`, `data.db`, `data.db-wal`
 - **Never query, attach to, restart, kill, or otherwise touch session `myllmbank`; it belongs to MyLLMBank.** MyLLMBank's public URL is https://llmbank.fs-playground.com/.
 - Verify webmail with `curl -fsS -o /dev/null http://127.0.0.1:5001/` on the host. The public URL should also respond successfully.
 - Logs: `/home/azureuser/llm-webmail/webmail.log`. Startup can take several minutes; investigate a progressing startup before declaring failure.
-- Run `venv/bin/python -m unittest -v test_config_security` for the isolated authentication/config regression suite. It makes no model calls and uses temporary databases.
+- Run `venv/bin/python -m unittest -v test_config_security test_llm_providers` for the isolated authentication, configuration and provider regression suites. They make no model calls and use temporary databases.
