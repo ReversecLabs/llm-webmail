@@ -25,7 +25,7 @@ def fixture_config():
         "server": {"session_secret": "formerly-disclosed-signing-key"},
         "llm": {"selected": "training-model", "models": [
             {"name": "training-model", "readable_name": "Training model", "enabled": True,
-             "provider": "openai", "params": {"model": "test", "api_key": "synthetic-provider-secret"}},
+             "provider": "openrouter", "params": {"model": "test", "api_key": "synthetic-provider-secret"}},
             {"key": "second-model", "label": "Second model", "enabled": True,
              "params": {"api_key": "another-provider-secret"}},
             {"name": "disabled-model", "enabled": False},

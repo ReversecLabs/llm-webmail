@@ -2,9 +2,8 @@ import json
 import os
 from pathlib import Path
 import tempfile
-from types import ModuleType
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import toml
 
@@ -29,25 +28,29 @@ class ProviderTests(unittest.TestCase):
                 create_openrouter_chat_model({"model": "test/model"})
 
     @patch("llm_providers.ChatOpenAI")
-    def test_direct_openai_and_local_settings_are_preserved(self, create):
-        for provider in ("openai", "llamacpp"):
-            params = {"model": "test-model", "temperature": 1}
-            create_chat_model({"provider": provider, "params": params})
-            create.assert_called_with(**params)
+    def test_direct_provider_routes_are_rejected(self, create):
+        for provider in ("openai", "llamacpp", "anthropic_bedrock", "together", "google", "ollama"):
+            with self.subTest(provider=provider), self.assertRaisesRegex(ValueError, "Unsupported LLM provider"):
+                create_chat_model({"provider": provider, "params": {"model": "old-model"}})
+        create.assert_not_called()
 
-    def test_existing_direct_provider_adapters_are_preserved(self):
-        for provider, module_name, factory_name in (
-            ("anthropic_bedrock", "langchain_aws", "ChatBedrock"),
-            ("together", "langchain_together", "ChatTogether"),
-            ("google", "langchain_google_genai", "ChatGoogleGenerativeAI"),
-            ("ollama", "langchain_ollama", "ChatOllama"),
-        ):
-            module = ModuleType(module_name)
-            factory = Mock()
-            setattr(module, factory_name, factory)
-            with patch.dict("sys.modules", {module_name: module}):
-                create_chat_model({"provider": provider, "params": {"model": "test-model"}})
-            factory.assert_called_once_with(model="test-model")
+    @patch("llm_providers.ChatOpenAI")
+    def test_luna_tool_call_setting_is_forwarded(self, create):
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "synthetic-key"}, clear=True):
+            create_chat_model({"provider": "openrouter", "params": {"model": "openai/gpt-6-luna", "reasoning_effort": "none"}})
+        self.assertEqual(create.call_args.kwargs["reasoning_effort"], "none")
+
+    def test_release_catalog_contains_only_the_nine_openrouter_models(self):
+        root = Path(__file__).resolve().parent
+        catalog = json.loads((root / "model_catalog.json").read_text())
+        models = catalog["models"]
+        self.assertEqual(len(models), 9)
+        self.assertEqual(len({m["name"] for m in models}), 9)
+        self.assertTrue(all(m["provider"] == "openrouter" and m["enabled"] for m in models))
+        self.assertTrue(all("openrouter" not in m["readable_name"].lower() for m in models))
+        self.assertIn(catalog["selected"], {m["name"] for m in models})
+        self.assertEqual([m["params"]["model"] for m in models if m["params"]["model"].startswith("openai/")], ["openai/gpt-6-luna"])
+        self.assertEqual(next(m["params"]["reasoning_effort"] for m in models if m["params"]["model"] == "openai/gpt-6-luna"), "none")
 
     def test_unknown_provider_does_not_silently_call_another_service(self):
         with self.assertRaisesRegex(ValueError, "Unsupported LLM provider"):
@@ -59,7 +62,7 @@ class ProviderTests(unittest.TestCase):
             config_path, catalog_path = root / "config.toml", root / "catalog.json"
             preserved = {"admin": {"username": "admin", "password": "synthetic-secret"}, "server": {"session_secret": "old-key"}, "limits": {"daily_summarize_quota": 123}}
             config_path.write_text(toml.dumps({**preserved, "llm": {"selected": "old"}}))
-            catalog = {"selected": "new", "models": [{"name": "new", "enabled": True}]}
+            catalog = {"selected": "new", "models": [{"name": "new", "provider": "openrouter", "enabled": True}]}
             catalog_path.write_text(json.dumps(catalog))
             self.assertEqual(apply_model_catalog(config_path, catalog_path), 1)
             actual = toml.load(config_path)
@@ -70,6 +73,12 @@ class ProviderTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "default model"):
                 apply_model_catalog(config_path, catalog_path)
             self.assertEqual(toml.load(config_path)["llm"]["selected"], "new")
+            catalog["selected"] = "new"
+            catalog["models"][0]["provider"] = "openai"
+            catalog_path.write_text(json.dumps(catalog))
+            with self.assertRaisesRegex(ValueError, "must use OpenRouter"):
+                apply_model_catalog(config_path, catalog_path)
+            self.assertEqual(toml.load(config_path)["llm"], {"selected": "new", "models": [{"name": "new", "provider": "openrouter", "enabled": True}]})
 
 
 if __name__ == "__main__":

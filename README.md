@@ -7,7 +7,7 @@ A sample vulnerable web application showcasing a GenAI (LLM-based) email summari
 ## Requirements
 
 - Python 3.x
-- An OpenAI/Google/AWS API key (added to a `.env` file)
+- An OpenRouter API key (added to a `.env` file); optional guardrails have separate credentials.
 
 ## Installation & Usage
 
@@ -55,8 +55,8 @@ then run `./scripts/deploy.sh`. The deployer backs up the live source and state,
 preserves the remote credentials and model configuration, and restarts only the
 webmail pane. See [AGENTS.md](AGENTS.md) for the host, paths and health checks.
 
-Hosted models can use OpenRouter through `OPENROUTER_API_KEY`, alongside the
-configured direct-provider connections. Model identifiers, provider settings and
+The nine chat-model choices use OpenRouter through `OPENROUTER_API_KEY`.
+Model identifiers, provider settings and
 the default selection are versioned in `model_catalog.json`. To apply a reviewed
 catalog release, use `DEPLOY_UPDATE_MODELS=1 ./scripts/deploy.sh`; this changes
 only model settings in the remote TOML after creating its backup.

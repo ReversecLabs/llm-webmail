@@ -1,12 +1,7 @@
-# Fill in the API Keys for the LLMs and guardrails you want to use
+# Hosted chat models use OpenRouter. The remaining keys are optional guardrails.
 OPENROUTER_API_KEY=
 OPENROUTER_APP_NAME=LLM Webmail
 OPENROUTER_SITE_URL=https://llmwebmail.fs-playground.com/
-
-OPENAI_API_KEY=
-GOOGLE_API_KEY=
-DEEPSEEK_API_KEY=
-TOGETHER_API_KEY=
 
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=

@@ -13,6 +13,8 @@ def apply_model_catalog(config_path, catalog_path):
     config = toml.load(config_path)
     catalog = json.loads(catalog_path.read_text())
     models = catalog["models"]
+    if not all(model.get("provider") == "openrouter" for model in models):
+        raise ValueError("Chat models must use OpenRouter")
     names = [model.get("name", model.get("key")) for model in models]
     if len(names) != len(set(names)) or not all(names):
         raise ValueError("Model identifiers must be present and unique")

@@ -27,18 +27,4 @@ def create_chat_model(model_config):
     params = model_config.get("params", {})
     if provider == "openrouter":
         return create_openrouter_chat_model(params)
-    if provider in ("openai", "llamacpp"):
-        return ChatOpenAI(**params)
-    if provider == "anthropic_bedrock":
-        from langchain_aws import ChatBedrock
-        return ChatBedrock(**params)
-    if provider == "together":
-        from langchain_together import ChatTogether
-        return ChatTogether(**params)
-    if provider == "google":
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        return ChatGoogleGenerativeAI(**params)
-    if provider == "ollama":
-        from langchain_ollama import ChatOllama
-        return ChatOllama(**params)
     raise ValueError(f"Unsupported LLM provider: {provider}")
