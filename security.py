@@ -10,7 +10,8 @@ def current_user():
 def login_required(fn):
     @wraps(fn)
     def w(*a, **k):
-        if not session.get("uid"):
+        if not current_user():
+            session.clear()
             return jsonify({"error": "auth_required"}), 401
         return fn(*a, **k)
     return w
@@ -46,7 +47,8 @@ def install_guards(app):
         if p.startswith("/static/") or p in ("/", "/index.html", "/favicon.ico"):
             return
         if p not in OPEN_PATHS and p.startswith(PROTECTED_PREFIXES):
-            if not session.get("uid"):
+            if not current_user():
+                session.clear()
                 return jsonify({"error": "auth_required"}), 401
         # admin-only writes to /api/config
         if (p, request.method) in ADMIN_POST_PATHS:

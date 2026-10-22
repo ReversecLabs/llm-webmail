@@ -1,7 +1,7 @@
 import secrets, datetime
 from haikunator import Haikunator
 from flask import Blueprint, request, jsonify, session, json
-from config_loader import load_config
+from config_loader import load_config, training_config
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 
@@ -31,9 +31,10 @@ def register():
         return jsonify({"error": "invalid_key"}), 400
     if k["used_by_user_id"] is not None:
         return jsonify({"error": "key_used"}), 400
-    default_cfg = load_config()  # use global config as starting point
+    default_cfg = training_config(load_config())
     user = create_user(username, generate_password_hash(password), initial_config_json=json.dumps(default_cfg))
     mark_key_used(key, user["id"])
+    session.clear()
     session["uid"] = user["id"]
     return jsonify({"username": user["username"], "role": user["role"]})
 
@@ -47,6 +48,7 @@ def login():
     u = get_user_by_username(username)
     if not u or not check_password_hash(u["password_hash"], password):
         return jsonify({"error": "invalid_credentials"}), 401
+    session.clear()
     session["uid"] = u["id"]
     return jsonify({"username": u["username"], "role": u["role"]})
 

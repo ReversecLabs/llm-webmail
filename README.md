@@ -34,9 +34,29 @@ A sample vulnerable web application showcasing a GenAI (LLM-based) email summari
 
 ## Testing Prompt Injection
 
+Application authentication and administration are protected separately from the
+training exercises. Participant configuration responses contain training controls
+and model labels, never admin credentials, signing secrets or provider parameters.
+Existing participant snapshots are cleaned at startup. The admin password remains
+in the server's `config.toml`; login sessions use a separate private
+`.session_secret` file that is created automatically and preserved on deployment.
+
 - This application is deliberately vulnerable. Use [spikee](https://spikee.ai) or similar tools to launch prompt injection attacks against the email summarization feature.
 - Refer to the [Reversec Labs article](https://labs.reversec.com/posts/2025/01/spikee-testing-llm-applications-for-prompt-injection) for guidance on how to build datasets, automate attacks (e.g., via Burp Suite Intruder), and interpret the results.
 
 ## Disclaimer
 
 This project is a learning resource (similar to Damn Vulnerable Web Applications) and **not** a production-ready product. It was developed to demonstrate prompt injection testing techniques. Use responsibly and at your own risk.
+
+## Deployment
+
+The course instance is https://llmwebmail.fs-playground.com/. Commit the release,
+then run `./scripts/deploy.sh`. The deployer backs up the live source and state,
+preserves the remote credentials and model configuration, and restarts only the
+webmail pane. See [AGENTS.md](AGENTS.md) for the host, paths and health checks.
+
+Run the isolated security regression suite with:
+
+```bash
+venv/bin/python -m unittest -v test_config_security
+```

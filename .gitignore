@@ -4,3 +4,6 @@ venv/
 __pycache__
 token_stats.json
 data.db*
+.session_secret
+webmail.log
+.deployed-revision

@@ -17,8 +17,11 @@ from guardrails.azure_prompt_shields import azure_detect_prompt_injection
 from guardrails.aws_bedrock_guardrail import aws_detect_prompt_injection
 
 from flask import session
-from db import ensure_admin
-from config_loader import load_config
+from db import ensure_admin, scrub_user_configs
+from config_loader import (
+    load_config, training_config, merge_training_config, public_config,
+    load_session_secret,
+)
 from security import install_guards
 from auth_api import auth_bp
 from quota_api import quota_bp
@@ -135,7 +138,7 @@ Ensure that your summaries are brief and clear.
 def effective_config_for_request():
     u = current_user()
     if u and u["role"] != "admin":
-        return get_user_config(u["id"]) or load_config()
+        return merge_training_config(training_config(load_config()), get_user_config(u["id"]) or {})
     return load_config()
 
 def llm_summary(documents, cfg, llm_obj):
@@ -168,8 +171,11 @@ def llm_summary(documents, cfg, llm_obj):
 
 app = Flask(__name__)
 _cfg = load_config()
-app.secret_key = _cfg["server"]["session_secret"]
+app.secret_key = load_session_secret()
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 ensure_admin(_cfg["admin"]["username"], _cfg["admin"]["password"])
+scrub_user_configs()
 install_guards(app)
 app.register_blueprint(auth_bp)
 app.register_blueprint(quota_bp)
@@ -298,25 +304,9 @@ def remove_malicious():
 
 @app.route("/api/config", methods=["GET"])
 def get_config():
-    """
-    Return the effective config for the current user.
-    Admins still see the global config.
-    """
-    u = current_user()
+    """Return training controls and the public model catalog."""
     base_cfg = load_config()
-    cfg = None
-    if u and u["role"] != "admin":
-        cfg = get_user_config(u["id"]) or base_cfg
-    else:
-        cfg = base_cfg
-
-    # Always attach the global model catalog so UI can render it
-    allowed, models = get_allowed_models_from_global()
-    cfg = dict(cfg)  # shallow copy
-    llm_cfg = dict(cfg.get("llm", {}))
-    llm_cfg["models"] = models
-    cfg["llm"] = llm_cfg
-    return jsonify(cfg)
+    return jsonify(public_config(effective_config_for_request(), base_cfg))
 
 
 @app.route("/api/config", methods=["POST"])
@@ -329,41 +319,30 @@ def update_config():
     if not u:
         return jsonify({"error": "auth_required"}), 401
 
-    new_config = request.get_json() or {}
+    new_config = request.get_json()
+    if not isinstance(new_config, dict):
+        return jsonify({"error": "bad_request"}), 400
     base = load_config()
-    allowed_keys = {"llm", "prompt_engineering", "prompt_injection_filter", "delimiter-filtering", "logging"}
+    allowed, _models = get_allowed_models_from_global()
 
     if u["role"] == "admin":
-        # shallow merge onto global
-        global_cfg = base
-        for k in allowed_keys.intersection(new_config.keys()):
-            global_cfg[k] = new_config[k]
+        global_cfg = merge_training_config(base, new_config)
         # enforce model allowlist
-        allowed, models = get_allowed_models_from_global()
         sel = global_cfg.get("llm", {}).get("selected")
         if sel and sel not in allowed:
             return jsonify({"error": "model_not_allowed", "allowed": allowed}), 400
         # persist to TOML
         from config_loader import save_config
         save_config(global_cfg)
-        llm_cfg = dict(global_cfg.get("llm", {}))
-        llm_cfg["models"] = models
-        global_cfg["llm"] = llm_cfg
-        return jsonify({"message": "Admin global configuration updated", "config": global_cfg})
+        return jsonify({"message": "Admin global configuration updated", "config": public_config(global_cfg, global_cfg)})
 
     # normal user path
-    user_cfg = get_user_config(u["id"]) or base
-    for k in allowed_keys.intersection(new_config.keys()):
-        user_cfg[k] = new_config[k]
-    allowed, models = get_allowed_models_from_global()
+    user_cfg = merge_training_config(effective_config_for_request(), new_config)
     sel = user_cfg.get("llm", {}).get("selected")
     if sel and sel not in allowed:
         return jsonify({"error": "model_not_allowed", "allowed": allowed}), 400
     set_user_config(u["id"], user_cfg)
-    llm_cfg = dict(user_cfg.get("llm", {}))
-    llm_cfg["models"] = models
-    user_cfg["llm"] = llm_cfg
-    return jsonify({"message": "User configuration updated", "config": user_cfg})
+    return jsonify({"message": "User configuration updated", "config": public_config(user_cfg, base)})
 
 
 @app.route("/api/token_stats")
@@ -376,4 +355,4 @@ if __name__ == "__main__":
             TOKEN_STATS = json.load(f)
     except FileNotFoundError:
         pass
-    app.run(port=5001, debug=True)
+    app.run(port=5001, debug=False)

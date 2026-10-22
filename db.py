@@ -1,6 +1,7 @@
 import sqlite3, os, pathlib, datetime, hashlib
 from werkzeug.security import generate_password_hash
 import json
+from config_loader import training_config
 
 DB_PATH = os.environ.get("WEBMAIL_DB", "data.db")
 _path = pathlib.Path(DB_PATH)
@@ -85,7 +86,7 @@ def create_user(username, password_hash, initial_config_json=None):
     if initial_config_json is not None:
         conn.execute(
             "INSERT OR REPLACE INTO user_configs (user_id, config_json) VALUES (?,?)",
-            (row["id"], initial_config_json),
+            (row["id"], json.dumps(training_config(json.loads(initial_config_json)))),
         )
         conn.commit()
     conn.close()
@@ -94,14 +95,26 @@ def create_user(username, password_hash, initial_config_json=None):
 # User config helpers
 def get_user_config(user_id):
     r = get_conn().execute("SELECT config_json FROM user_configs WHERE user_id=?", (user_id,)).fetchone()
-    return json.loads(r["config_json"]) if r else None
+    return training_config(json.loads(r["config_json"])) if r else None
 
 def set_user_config(user_id, cfg_dict):
-    j = json.dumps(cfg_dict)
+    j = json.dumps(training_config(cfg_dict))
     conn = get_conn()
     conn.execute("INSERT OR REPLACE INTO user_configs (user_id, config_json) VALUES (?,?)", (user_id, j))
     conn.commit()
     conn.close()
+
+def scrub_user_configs():
+    """Remove server secrets from legacy snapshots without changing accounts."""
+    conn = get_conn()
+    try:
+        for row in conn.execute("SELECT user_id, config_json FROM user_configs").fetchall():
+            clean = json.dumps(training_config(json.loads(row["config_json"])))
+            if clean != row["config_json"]:
+                conn.execute("UPDATE user_configs SET config_json=? WHERE user_id=?", (clean, row["user_id"]))
+        conn.commit()
+    finally:
+        conn.close()
 
 # Signup keys
 def create_keys(tokens):
