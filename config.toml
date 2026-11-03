@@ -9,6 +9,11 @@ enabled = true
 [llm.models.params]
 model = "qwen/qwen3.6-35b-a3b"
 max_retries = 2
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
+[llm.models.params.extra_body.reasoning]
+enabled = false
 [[llm.models]]
 name = "openrouter_qwen38_flash"
 provider = "openrouter"
@@ -18,6 +23,11 @@ enabled = true
 [llm.models.params]
 model = "qwen/qwen3.8-flash"
 max_retries = 2
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
+[llm.models.params.extra_body.reasoning]
+max_tokens = 512
 [[llm.models]]
 name = "openrouter_deepseek_v41_flash_1017"
 provider = "openrouter"
@@ -45,6 +55,9 @@ enabled = true
 [llm.models.params]
 model = "minimax/minimax-m2.7"
 max_retries = 2
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
 [[llm.models]]
 name = "openrouter_minimax_m31_flash"
 provider = "openrouter"

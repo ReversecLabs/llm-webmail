@@ -7,7 +7,16 @@
       "readable_name": "Qwen 3.6 35B A3B",
       "params": {
         "model": "qwen/qwen3.6-35b-a3b",
-        "max_retries": 2
+        "max_retries": 2,
+        "extra_body": {
+          "provider": {
+            "sort": "throughput",
+            "allow_fallbacks": true
+          },
+          "reasoning": {
+            "enabled": false
+          }
+        }
       },
       "enabled": true
     },
@@ -17,7 +26,16 @@
       "readable_name": "Qwen 3.8 Flash",
       "params": {
         "model": "qwen/qwen3.8-flash",
-        "max_retries": 2
+        "max_retries": 2,
+        "extra_body": {
+          "provider": {
+            "sort": "throughput",
+            "allow_fallbacks": true
+          },
+          "reasoning": {
+            "max_tokens": 512
+          }
+        }
       },
       "enabled": true
     },
@@ -47,7 +65,13 @@
       "readable_name": "MiniMax M2.7",
       "params": {
         "model": "minimax/minimax-m2.7",
-        "max_retries": 2
+        "max_retries": 2,
+        "extra_body": {
+          "provider": {
+            "sort": "throughput",
+            "allow_fallbacks": true
+          }
+        }
       },
       "enabled": true
     },
