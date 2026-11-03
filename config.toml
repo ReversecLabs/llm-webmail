@@ -37,6 +37,11 @@ enabled = true
 [llm.models.params]
 model = "deepseek/deepseek-v4.1-flash-1017"
 max_retries = 2
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
+[llm.models.params.extra_body.reasoning]
+effort = "low"
 [[llm.models]]
 name = "openrouter_glm53_flash"
 provider = "openrouter"
@@ -46,6 +51,11 @@ enabled = true
 [llm.models.params]
 model = "z-ai/glm-5.3-flash"
 max_retries = 2
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
+[llm.models.params.extra_body.reasoning]
+effort = "low"
 [[llm.models]]
 name = "openrouter_minimax_m27"
 provider = "openrouter"
@@ -67,6 +77,11 @@ enabled = true
 [llm.models.params]
 model = "minimax/minimax-m3.1-flash"
 max_retries = 2
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
+[llm.models.params.extra_body.reasoning]
+effort = "low"
 [[llm.models]]
 name = "openrouter_gemma4_31b"
 provider = "openrouter"
@@ -76,6 +91,11 @@ enabled = true
 [llm.models.params]
 model = "google/gemma-4-31b-it"
 max_retries = 2
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
+[llm.models.params.extra_body.reasoning]
+enabled = false
 [[llm.models]]
 name = "openrouter_gpt_6_luna"
 provider = "openrouter"
@@ -86,6 +106,9 @@ enabled = true
 model = "openai/gpt-6-luna"
 max_retries = 2
 reasoning_effort = "none"
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
 [[llm.models]]
 name = "openrouter_claude_sonnet_55"
 provider = "openrouter"
@@ -95,6 +118,11 @@ enabled = true
 [llm.models.params]
 model = "anthropic/claude-sonnet-5.5"
 max_retries = 2
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
+[llm.models.params.extra_body.reasoning]
+effort = "low"
 [[llm.models]]
 name = "openrouter_gemini_38_flash"
 provider = "openrouter"
@@ -104,6 +132,11 @@ enabled = true
 [llm.models.params]
 model = "google/gemini-3.8-flash"
 max_retries = 2
+[llm.models.params.extra_body.provider]
+sort = "throughput"
+allow_fallbacks = true
+[llm.models.params.extra_body.reasoning]
+effort = "low"
 
 [prompt_engineering]
 mode = "disabled"
