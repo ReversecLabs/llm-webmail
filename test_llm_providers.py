@@ -40,12 +40,12 @@ class ProviderTests(unittest.TestCase):
             create_chat_model({"provider": "openrouter", "params": {"model": "openai/gpt-6-luna", "reasoning_effort": "none"}})
         self.assertEqual(create.call_args.kwargs["reasoning_effort"], "none")
 
-    def test_release_catalog_contains_only_the_nine_openrouter_models(self):
+    def test_release_catalog_contains_only_the_ten_openrouter_models(self):
         root = Path(__file__).resolve().parent
         catalog = json.loads((root / "model_catalog.json").read_text())
         models = catalog["models"]
-        self.assertEqual(len(models), 9)
-        self.assertEqual(len({m["name"] for m in models}), 9)
+        self.assertEqual(len(models), 10)
+        self.assertEqual(len({m["name"] for m in models}), 10)
         self.assertTrue(all(m["provider"] == "openrouter" and m["enabled"] for m in models))
         self.assertTrue(all("openrouter" not in m["readable_name"].lower() for m in models))
         self.assertIn(catalog["selected"], {m["name"] for m in models})

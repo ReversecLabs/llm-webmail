@@ -1,5 +1,5 @@
 {
-  "selected": "openrouter_qwen38_flash",
+  "selected": "openrouter_minimax_m27",
   "models": [
     {
       "name": "openrouter_qwen36_35b_a3b",
@@ -37,6 +37,16 @@
       "readable_name": "GLM 5.3 Flash",
       "params": {
         "model": "z-ai/glm-5.3-flash",
+        "max_retries": 2
+      },
+      "enabled": true
+    },
+    {
+      "name": "openrouter_minimax_m27",
+      "provider": "openrouter",
+      "readable_name": "MiniMax M2.7",
+      "params": {
+        "model": "minimax/minimax-m2.7",
         "max_retries": 2
       },
       "enabled": true

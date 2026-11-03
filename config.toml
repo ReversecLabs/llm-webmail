@@ -1,5 +1,5 @@
 [llm]
-selected = "openrouter_qwen38_flash"
+selected = "openrouter_minimax_m27"
 [[llm.models]]
 name = "openrouter_qwen36_35b_a3b"
 provider = "openrouter"
@@ -35,6 +35,15 @@ enabled = true
 
 [llm.models.params]
 model = "z-ai/glm-5.3-flash"
+max_retries = 2
+[[llm.models]]
+name = "openrouter_minimax_m27"
+provider = "openrouter"
+readable_name = "MiniMax M2.7"
+enabled = true
+
+[llm.models.params]
+model = "minimax/minimax-m2.7"
 max_retries = 2
 [[llm.models]]
 name = "openrouter_minimax_m31_flash"

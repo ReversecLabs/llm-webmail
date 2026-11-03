@@ -55,7 +55,7 @@ then run `./scripts/deploy.sh`. The deployer backs up the live source and state,
 preserves the remote credentials and model configuration, and restarts only the
 webmail pane. See [AGENTS.md](AGENTS.md) for the host, paths and health checks.
 
-The nine chat-model choices use OpenRouter through `OPENROUTER_API_KEY`.
+The ten chat-model choices use OpenRouter through `OPENROUTER_API_KEY`.
 Model identifiers, provider settings and
 the default selection are versioned in `model_catalog.json`. To apply a reviewed
 catalog release, use `DEPLOY_UPDATE_MODELS=1 ./scripts/deploy.sh`; this changes
