@@ -223,6 +223,25 @@
         }
       },
       "enabled": true
+    },
+    {
+      "name": "openrouter_gpt_oss_120b",
+      "provider": "openrouter",
+      "readable_name": "GPT OSS 120B",
+      "params": {
+        "model": "openai/gpt-oss-120b",
+        "max_retries": 2,
+        "extra_body": {
+          "provider": {
+            "sort": "throughput",
+            "allow_fallbacks": true
+          },
+          "reasoning": {
+            "effort": "low"
+          }
+        }
+      },
+      "enabled": true
     }
   ]
 }

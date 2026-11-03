@@ -40,16 +40,16 @@ class ProviderTests(unittest.TestCase):
             create_chat_model({"provider": "openrouter", "params": {"model": "openai/gpt-6-luna", "reasoning_effort": "none"}})
         self.assertEqual(create.call_args.kwargs["reasoning_effort"], "none")
 
-    def test_release_catalog_contains_only_the_twelve_openrouter_models(self):
+    def test_release_catalog_contains_only_the_thirteen_openrouter_models(self):
         root = Path(__file__).resolve().parent
         catalog = json.loads((root / "model_catalog.json").read_text())
         models = catalog["models"]
-        self.assertEqual(len(models), 12)
-        self.assertEqual(len({m["name"] for m in models}), 12)
+        self.assertEqual(len(models), 13)
+        self.assertEqual(len({m["name"] for m in models}), 13)
         self.assertTrue(all(m["provider"] == "openrouter" and m["enabled"] for m in models))
         self.assertTrue(all("openrouter" not in m["readable_name"].lower() for m in models))
         self.assertIn(catalog["selected"], {m["name"] for m in models})
-        self.assertEqual([m["params"]["model"] for m in models if m["params"]["model"].startswith("openai/")], ["openai/gpt-6-luna"])
+        self.assertEqual([m["params"]["model"] for m in models if m["params"]["model"].startswith("openai/")], ["openai/gpt-6-luna", "openai/gpt-oss-120b"])
         self.assertEqual(next(m["params"]["reasoning_effort"] for m in models if m["params"]["model"] == "openai/gpt-6-luna"), "none")
 
     def test_unknown_provider_does_not_silently_call_another_service(self):
