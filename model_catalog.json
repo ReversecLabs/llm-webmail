@@ -185,6 +185,44 @@
         }
       },
       "enabled": true
+    },
+    {
+      "name": "openrouter_gemini_25_flash",
+      "provider": "openrouter",
+      "readable_name": "Gemini 2.5 Flash",
+      "params": {
+        "model": "google/gemini-2.5-flash",
+        "max_retries": 2,
+        "extra_body": {
+          "provider": {
+            "sort": "throughput",
+            "allow_fallbacks": true
+          },
+          "reasoning": {
+            "enabled": false
+          }
+        }
+      },
+      "enabled": true
+    },
+    {
+      "name": "openrouter_qwen35_35b_a3b",
+      "provider": "openrouter",
+      "readable_name": "Qwen 3.5 35B A3B",
+      "params": {
+        "model": "qwen/qwen3.5-35b-a3b",
+        "max_retries": 2,
+        "extra_body": {
+          "provider": {
+            "sort": "throughput",
+            "allow_fallbacks": true
+          },
+          "reasoning": {
+            "enabled": false
+          }
+        }
+      },
+      "enabled": true
     }
   ]
 }

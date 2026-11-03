@@ -8,7 +8,7 @@
 - The remote Git checkout contains historical custom changes. Never reset or clean it. Deployment records the source commit in `.deployed-revision`.
 - The existing virtualenv is reused. The deployer stops if requirements differ; dependency changes require their own reviewed installation.
 - For an explicitly requested model-catalog update, use `DEPLOY_UPDATE_MODELS=1 ./scripts/deploy.sh`. After backing up the stopped app, this updates only the remote TOML's `llm` section from the reviewed `model_catalog.json`; authentication, guardrails and quota settings are preserved. Ordinary deployments do not change the server config.
-- All ten chat-model options use OpenRouter and `OPENROUTER_API_KEY` in the remote `.env`. Remove superseded catalog entries rather than retaining a second legacy menu. Keys are never included in the model catalog or public model list. Other environment credentials may still be used by optional guardrails; preserve them unless their removal is explicitly requested.
+- All twelve chat-model options use OpenRouter and `OPENROUTER_API_KEY` in the remote `.env`. Remove superseded catalog entries rather than retaining a second legacy menu. Keys are never included in the model catalog or public model list. Other environment credentials may still be used by optional guardrails; preserve them unless their removal is explicitly requested.
 
 ## Persistent state and authentication
 
