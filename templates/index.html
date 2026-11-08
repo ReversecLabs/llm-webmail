@@ -177,7 +177,8 @@
                     <header class="title is-5">Configuration</header>
                     <!-- Inside the side panel, LLM dropdown: -->
                     <div class="field">
-                        <label class="label">LLM</label>
+                        <p v-if="modelNotice" class="notification is-info" role="status">{{ modelNotice }}</p>
+<label class="label">LLM</label>
                         <div class="control">
                             <div class="select">
                                 <select v-model="config.llm.selected" @change="updateConfig">
@@ -251,12 +252,43 @@
                 <section class="modal-card-body">
                     <div class="tabs is-boxed">
                         <ul>
+                            <li :class="{ 'is-active': adminTab==='models' }"><a @click="adminTab='models'; loadModelCatalog()">Models</a></li>
                             <li :class="{ 'is-active': adminTab==='users' }"><a @click="adminTab='users'">Users</a></li>
                             <li :class="{ 'is-active': adminTab==='keys' }"><a @click="adminTab='keys'">Signup Keys</a>
                             </li>
                         </ul>
                     </div>
 
+                    <div v-show="adminTab==='models'"><div class="model-admin">
+  <h2 class="title is-5">Available models</h2>
+  <p class="mb-3">Enable models for participants and choose the fallback when a selected model is disabled. Changes apply to new requests.</p>
+  <p v-if="modelError" class="notification is-danger" role="alert">{{ modelError }}</p>
+  <p v-if="modelMessage" class="notification is-success" role="status">{{ modelMessage }}</p>
+  <template v-if="modelCatalog">
+    <div class="field">
+      <label class="label" for="model-default">Default model</label>
+      <div class="select is-fullwidth"><select id="model-default" v-model="modelCatalog.default">
+        <option v-for="model in modelCatalog.models.filter(m => m.enabled)" :key="model.name" :value="model.name">{{ model.label }}</option>
+      </select></div>
+    </div>
+    <div class="table-container"><table class="table is-fullwidth">
+      <thead><tr><th>Enabled</th><th>Display name</th><th>OpenRouter model ID</th></tr></thead>
+      <tbody><tr v-for="model in modelCatalog.models" :key="model.name">
+        <td><input type="checkbox" v-model="model.enabled" :aria-label="'Enable ' + model.label"></td>
+        <td><input class="input is-small" style="min-width:180px" v-model="model.label" :aria-label="'Display name for ' + model.model_id" maxlength="120"></td>
+        <td style="overflow-wrap:anywhere;min-width:180px">{{ model.model_id }}</td>
+      </tr></tbody>
+    </table></div>
+    <h3 class="title is-6 mt-4">Add an OpenRouter model</h3>
+    <div class="field"><label class="label" for="new-model-id">Model ID</label><input id="new-model-id" class="input" v-model="newModelId" placeholder="publisher/model-name" maxlength="200"></div>
+    <div class="field"><label class="label" for="new-model-label">Display name</label><input id="new-model-label" class="input" v-model="newModelLabel" maxlength="120"></div>
+    <p class="help mb-3">Uses the server’s OpenRouter connection. The model must be available to that account and support this app’s requests.</p>
+    <div class="buttons"><button class="button" @click="addModelRow" :disabled="modelSaving">Add to list</button>
+    <button class="button is-primary" @click="saveModelCatalog" :class="{'is-loading': modelSaving}" :disabled="modelSaving">Save models</button>
+    <button class="button is-light" @click="loadModelCatalog" :disabled="modelSaving">Reload saved models</button></div>
+  </template>
+</div>
+</div>
                     <!-- Users tab -->
                     <div v-show="adminTab==='users'">
                         <div v-if="admin.users.length===0" class="notification is-light">No users.</div>
@@ -345,6 +377,7 @@
     <!-- Load Vue and Showdown -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
+    <script src="/static/model-admin.js"></script>
     <script src="/static/main.js?v=2"></script>
 </body>
 

@@ -29,3 +29,7 @@ Never replace or delete `config.toml`, `.env`, `venv/`, `data.db`, `data.db-wal`
 - Verify webmail with `curl -fsS -o /dev/null http://127.0.0.1:5001/` on the host. The public URL should also respond successfully.
 - Logs: `/home/azureuser/llm-webmail/webmail.log`. Startup can take several minutes; investigate a progressing startup before declaring failure.
 - Run `venv/bin/python -m unittest -v test_config_security test_llm_providers` for the isolated authentication, configuration and provider regression suites. They make no model calls and use temporary databases.
+
+## Runtime model administration
+
+`model_settings.json` stores administrator model additions, enabled flags and the default. Preserve and back it up as runtime state; never ship a local copy. It overrides the shipped catalogue after the first admin save. Ordinary deployments and catalogue source changes must not erase it.

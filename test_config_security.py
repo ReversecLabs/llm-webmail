@@ -283,6 +283,32 @@ class ConfigSecurityTests(unittest.TestCase):
         create.assert_called_once_with(self.cfg["llm"]["models"][0])
         self.assertEqual(self.module.TOKEN_STATS["training-model"]["output_tokens"], 8)
 
+    def test_model_admin_requires_real_admin_role(self):
+        self.sign_in()
+        for verb in ('get', 'put'):
+            self.assertEqual(getattr(self.client, verb)('/api/admin/models', json={}).status_code, 403)
+        self.sign_in(admin=True)
+        response = self.client.get('/api/admin/models')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('secret', response.get_data(as_text=True))
+
+    def test_model_changes_apply_without_restart(self):
+        import model_admin
+        with tempfile.TemporaryDirectory() as folder, patch.object(model_admin, 'SETTINGS_PATH', Path(folder) / 'models.json'):
+            self.sign_in(admin=True)
+            payload = self.client.get('/api/admin/models').json
+            previous = payload['default']
+            payload['models'].append({'name': 'publisher/new', 'model_id': 'publisher/new', 'label': 'New', 'enabled': True})
+            for row in payload['models'][:-1]: row['enabled'] = False
+            payload['default'] = 'publisher/new'
+            response = self.client.put('/api/admin/models', json=payload)
+            self.assertEqual(response.status_code, 200, response.json)
+            selected = response.json['default']
+            self.sign_in()
+            self.assertEqual(self.client.get('/api/config').json['llm']['selected'], selected)
+            self.assertEqual(len(self.client.get('/api/models').json['models']), 1)
+            self.assertEqual(self.module.resolve_model_choice({'llm': {'selected': previous}}), selected)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -55,7 +55,7 @@ then run `./scripts/deploy.sh`. The deployer backs up the live source and state,
 preserves the remote credentials and model configuration, and restarts only the
 webmail pane. See [AGENTS.md](AGENTS.md) for the host, paths and health checks.
 
-The ten chat-model choices use OpenRouter through `OPENROUTER_API_KEY`.
+The thirteen built-in chat-model choices use OpenRouter through `OPENROUTER_API_KEY`.
 Model identifiers, provider settings and
 the default selection are versioned in `model_catalog.json`. To apply a reviewed
 catalog release, use `DEPLOY_UPDATE_MODELS=1 ./scripts/deploy.sh`; this changes
@@ -67,5 +67,13 @@ initialized, and model connection parameters remain server-side.
 Run the isolated security regression suite with:
 
 ```bash
-venv/bin/python -m unittest -v test_config_security test_llm_providers
+venv/bin/python -m unittest -v test_config_security test_llm_providers test_model_admin
 ```
+
+## Admin model selection
+
+Open **Admin Console → Models** to enable or disable models, choose a default, or add an OpenRouter model ID and display name. **Save models** applies changes to new requests without restarting. Open model menus refresh within two seconds. Existing requests may finish; a disabled selection falls back to the enabled default.
+
+New IDs use the server's existing OpenRouter connection. Provider keys and endpoints remain server-owned. Model availability and support for the application's requests are determined by the provider.
+
+Administrator choices are persisted in `model_settings.json` and survive ordinary deployments. After the first save, this file takes precedence over the shipped catalogue. Keep it with the application's runtime backups.

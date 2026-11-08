@@ -27,7 +27,7 @@ sys.stdout.buffer.write(b"\0".join(paths) + b"\0")
 if tar -tzf "$archive" | python3 -c '
 import re, sys
 names = sys.stdin.read().splitlines()
-pattern = r"(^|/)(config\.toml|\.env|\.session_secret|venv|data\.db[^/]*|token_stats\.json)(/|$)"
+pattern = r"(^|/)(model_settings\.json|config\.toml|\.env|\.session_secret|venv|data\.db[^/]*|token_stats\.json)(/|$)"
 sys.exit(0 if any(re.search(pattern, name) for name in names) else 1)
 '; then
     echo "Refusing to deploy server configuration or runtime state." >&2

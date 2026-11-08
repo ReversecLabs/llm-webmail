@@ -35,7 +35,7 @@ tar -czf "$backup" --exclude='./venv' --exclude='./.git' --exclude='./__pycache_
 echo "Source and persistent-state backup: $backup"
 rsync -a \
     --exclude='.git/' --exclude='config.toml' --exclude='.env' \
-    --exclude='.session_secret' --exclude='venv/' --exclude='data.db*' \
+    --exclude='model_settings.json' --exclude='.session_secret' --exclude='venv/' --exclude='data.db*' \
     --exclude='token_stats.json' --exclude='webmail.log' \
     "$stage/" "$app_dir/"
 printf '%s\n' "$revision" > "$app_dir/.deployed-revision"

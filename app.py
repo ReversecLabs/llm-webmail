@@ -37,11 +37,16 @@ LOG_VERBOSE = config.get("logging", {}).get("verbose", False)
 # load existing stats or start fresh
 TOKEN_STATS = {}
 
+def model_settings():
+    import model_admin
+    cfg = load_config().get('llm', {})
+    return model_admin.snapshot(cfg.get('models', []), cfg.get('selected'))
+
+
 def get_allowed_models_from_global():
-    gcfg = load_config()
-    models = gcfg.get("llm", {}).get("models", [])
-    allowed = [m.get("name", m.get("key")) for m in models if m.get("enabled")]
-    return allowed, models
+    models = model_settings()['models']
+    return [m.get('name', m.get('key')) for m in models if m.get('enabled', True)], models
+
 
 def record_token_usage(usage, llm_name):
     stats = TOKEN_STATS.setdefault(llm_name, {"input_tokens": 0, "output_tokens": 0})
@@ -62,14 +67,8 @@ def initialize_llm(llm_choice):
 
 
 def resolve_model_choice(cfg):
-    allowed, _models = get_allowed_models_from_global()
-    if not allowed:
-        raise RuntimeError("No enabled models are configured")
-    selected = cfg.get("llm", {}).get("selected")
-    if selected in allowed:
-        return selected
-    default = load_config().get("llm", {}).get("selected")
-    return default if default in allowed else allowed[0]
+    import model_admin
+    return model_admin.resolve(model_settings(), cfg.get('llm', {}).get('selected'))
 
 def remove_think_tags(text):
     return re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
@@ -118,7 +117,9 @@ Ensure that your summaries are brief and clear.
 def effective_config_for_request():
     u = current_user()
     if u and u["role"] != "admin":
-        return merge_training_config(training_config(load_config()), get_user_config(u["id"]) or {})
+        base = training_config(load_config())
+        base.setdefault('llm', {})['selected'] = model_settings()['default']
+        return merge_training_config(base, get_user_config(u["id"]) or {})
     return load_config()
 
 def llm_summary(documents, cfg, llm_obj):
@@ -162,6 +163,9 @@ app.register_blueprint(quota_bp)
 app.register_blueprint(keys_bp)
 app.register_blueprint(config_admin_bp)
 app.register_blueprint(users_admin_bp)
+import model_admin
+from security import admin_required, login_required
+model_admin.install(app, model_settings, admin_required, login_required)
 
 BASE_EMAILS = [
     {

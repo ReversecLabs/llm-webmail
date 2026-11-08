@@ -2,6 +2,7 @@ const { createApp } = Vue;
 const converter = new showdown.Converter({ tables: true, strikethrough: true });
 
 createApp({
+    mixins: [modelAdministration],
   data() {
     return {
       authenticated: false,

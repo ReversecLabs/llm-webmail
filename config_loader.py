@@ -51,7 +51,9 @@ def public_config(cfg, global_cfg):
     result = training_config(cfg)
     # The browser needs model identifiers and labels, never provider parameters.
     models = []
-    for model in global_cfg.get("llm", {}).get("models", []):
+    from model_admin import snapshot
+    llm = global_cfg.get('llm', {})
+    for model in snapshot(llm.get('models', []), llm.get('selected'))['models']:
         models.append({
             name: model[name]
             for name, kind in {
